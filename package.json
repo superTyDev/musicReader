@@ -1,28 +1,22 @@
 {
-	"name": "webcage",
-	"version": "1.0.0",
-	"description": "",
-	"main": "index.js",
-	"scripts": {
-		"start": "node index.js",
-		"dev": "nodemon index"
-	},
-	"keywords": [],
-	"author": "",
-	"license": "ISC",
-	"engines": {
-		"node": "16.x"
-	},
-	"dependencies": {
-		"blink-detection": "^1.2.1",
-		"cors": "^2.8.5",
-		"eslint": "8.31.0",
-		"eslint-config-next": "13.1.1",
-		"next": "13.1.1",
-		"react": "18.2.0",
-		"react-dom": "18.2.0"
-	},
-	"devDependencies": {
-		"nodemon": "^2.0.7"
-	}
+  "name": "webcage",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "engines": { "node": "16.x" },
+  "dependencies": {
+    "express": "^4.17.1",
+    "moment": "^2.29.1",
+    "socket.io": "^3.1.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.7"
+  }
 }
