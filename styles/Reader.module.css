@@ -1,0 +1,129 @@
+.page {
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+}
+
+.header {
+    width: 100vw;
+    height: 50px;
+    line-height: 50px;
+    padding: 0 20px;
+    background-color: #000000bb;
+    color: white;
+}
+
+.sideNav {
+    width: max(min(200px, 10vw), 80px);
+    height: calc(100vh - 50px);
+    position: fixed;
+    left: 0;
+    bottom: 0;
+
+    background-color: #00000088;
+    color: white;
+
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.folderList {
+    overflow-x: auto;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+}
+
+.folderList div {
+    white-space: nowrap;
+    min-width: 100%;
+    width: fit-content;
+    padding: 5px 2px;
+}
+
+.fullscreen {
+    position: fixed;
+    z-index: 1;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #00000022;
+    color: white;
+
+    text-align: center;
+    line-height: 40px;
+
+    bottom: 20px;
+    left: 20px;
+}
+
+.fullscreen:hover,
+.folderList div:hover {
+    background-color: #00000055;
+}
+
+.mainCont {
+    background-color: aliceblue;
+    width: calc(100vw - max(min(200px, 10vw), 80px));
+    height: calc(100vh - 50px);
+    position: fixed;
+    right: 0;
+    bottom: 0;
+}
+
+.pdfCont {
+    width: calc(100vw - max(min(200px, 10vw), 80px)) !important;
+    height: calc(100vh - 100px) !important;
+    object-fit: contain;
+    position: fixed;
+    right: 0;
+    bottom: 0px;
+}
+
+.pagerCont {
+    width: calc(100vw - max(min(200px, 10vw), 80px));
+    height: 50px;
+    position: fixed;
+    right: 0;
+    top: 50px;
+    background-color: #000000bb;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    display: flex;
+    gap: 20px;
+}
+
+.mainCont:fullscreen .pdfCont {
+    width: 100vw !important;
+    height: calc(100vh - 50px) !important;
+    top: 50px;
+}
+
+.mainCont:fullscreen .pagerCont {
+    width: 100vw;
+    height: 50px;
+    right: 0;
+    top: 0;
+}
+
+.pagerCont>* {
+    padding: 10px;
+}
+
+.pagerCont button {
+    flex: 1;
+}
+
+.videoBox {
+    width: 200px;
+    height: 200px;
+    z-index: 1;
+    position: fixed;
+    right: 20px;
+    left: 20px;
+    object-fit: contain;
+}

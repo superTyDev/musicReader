@@ -21,3 +21,33 @@ body {
   margin: 0px;
   height: 100vh;
 }
+
+spacer {
+  flex: 1;
+}
+
+i {
+  font-family: "Material Symbols Outlined";
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  display: inline-block;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
+}
+
+.button {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  background-color: #f19693;
+  box-shadow: 2px 2px 2px #00000055;
+}
+
+.button:hover {
+  background-color: #da6c68;
+}

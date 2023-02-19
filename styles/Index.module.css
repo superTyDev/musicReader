@@ -1,0 +1,11 @@
+.page {
+    padding: 10vw;
+}
+
+.center {
+    width: max(80%, 800px);
+    margin: auto;
+    background-color: #ffffff55;
+    padding: 10px 20px;
+    border-radius: 10px;
+}
