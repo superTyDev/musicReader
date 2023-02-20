@@ -1,7 +1,5 @@
 import * as faceLandmarksDetection from "@tensorflow-models/face-landmarks-detection";
-import * as tf from "@tensorflow/tfjs-core";
 import "@tensorflow/tfjs-backend-webgl";
-import { useAnimationFrame } from "../lib/hooks/useAnimationFrame";
 
 let detector, video, event, blinkRate;
 const VIDEO_SIZE = 500;
