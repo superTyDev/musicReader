@@ -6,6 +6,8 @@ import { usePdf } from "@mikecousins/react-pdf";
 import styles from "../styles/Reader.module.css";
 import { useEffect } from "react";
 
+let newFile = false;
+
 async function openFolder(buttonEvent, files, setFiles, setDirectory) {
 	try {
 		var directory = await window.showDirectoryPicker({
@@ -27,7 +29,7 @@ async function openFolder(buttonEvent, files, setFiles, setDirectory) {
 	}
 }
 
-function DisplayFiles({ files, setSelectedFile, directory }) {
+function DisplayFiles({ files, setSelectedFile, directory, setPage }) {
 	if (files.length) {
 		return (
 			<>
@@ -41,6 +43,7 @@ function DisplayFiles({ files, setSelectedFile, directory }) {
 										console.log(pdfStream);
 										console.log(typeof pdfStream);
 										setSelectedFile(window.URL.createObjectURL(pdfStream));
+										newFile = true;
 									});
 								});
 							}}
@@ -69,8 +72,20 @@ export default function Reader() {
 	const { pdfDocument, pdfPage } = usePdf({
 		file: selectedFile,
 		page,
+		onDocumentLoadSuccess: newFile
+			? () => {
+					setPage(1);
+					newFile = false;
+			  }
+			: undefined,
 		canvasRef,
 	});
+
+	// useEffect(() => {
+	// 	setPage(1);
+	// 	// pdfPage?.render();
+	// 	// console.log(pdfPage);
+	// }, [pdfDocument]);
 
 	let Blink = null;
 	async function initBlink() {
@@ -137,6 +152,7 @@ export default function Reader() {
 							files={files}
 							setSelectedFile={setSelectedFile}
 							directory={directory}
+							setPage={setPage}
 						/>
 						<spacer />
 					</div>
