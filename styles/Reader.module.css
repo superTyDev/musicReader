@@ -119,11 +119,16 @@
 }
 
 .videoBox {
-    width: 200px;
-    height: 200px;
+    width: 100px;
+    height: 100px;
     z-index: 1;
     position: fixed;
     right: 20px;
-    left: 20px;
+    bottom: 20px;
     object-fit: contain;
+    transition: .5s all;
+}
+
+.videoBox:hover {
+    filter: brightness(0.5) hue-rotate(315deg);
 }

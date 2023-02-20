@@ -1,13 +1,7 @@
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import React, { useState, useRef } from "react";
-// import blink from "./../components/blink";
 import { usePdf } from "@mikecousins/react-pdf";
-import Webcam from "react-webcam";
-
-// const blink = dynamic(async () => await import("./../components/blink"), {
-// 	ssr: false,
-// });
 
 import styles from "../styles/Reader.module.css";
 import { useEffect } from "react";
@@ -60,18 +54,6 @@ function DisplayFiles({ files, setSelectedFile, directory }) {
 	}
 }
 
-async function initBlink() {
-	const Blink = (await import("../components/blink.ts")).default;
-
-	await Blink.loadModel();
-
-	const videoElement = document.querySelector("video");
-	await Blink.setUpCamera(videoElement);
-
-	const blinkPrediction = await Blink.getBlinkPrediction();
-	console.log("Blink: ", blinkPrediction);
-}
-
 export default function Reader() {
 	const [files, setFiles] = useState([]);
 	const [directory, setDirectory] = useState(null);
@@ -87,7 +69,32 @@ export default function Reader() {
 		canvasRef,
 	});
 
-	const videoRef = useRef(null);
+	let Blink = null;
+	async function initBlink() {
+		Blink = (await import("../components/blink")).default;
+
+		await Blink.loadModel();
+
+		const videoElement = document.querySelector("video");
+		await Blink.setUpCamera(videoElement);
+		predictBlink();
+	}
+
+	async function predictBlink() {
+		const blinkPrediction = await Blink.getBlinkPrediction();
+		// console.log("Blink: ", blinkPrediction);
+		if (blinkPrediction.blink) {
+			console.log("blink");
+		}
+		if (blinkPrediction.longBlink) {
+			console.log("longBlink");
+			setPage(page + 1);
+		}
+		if (blinkPrediction.wink) {
+			console.log("wink");
+		}
+		let raf = requestAnimationFrame(predictBlink);
+	}
 
 	useEffect(() => {
 		if (document.readyState === "complete") {
@@ -162,7 +169,13 @@ export default function Reader() {
 					>
 						fullscreen
 					</i>
-					<video className={styles.videoBox} ref={videoRef}></video>
+					<video
+						className={styles.videoBox}
+						style={{ transform: "scaleX(-1)" }}
+						onClick={(e) => {
+							e.target.style.display = "none";
+						}}
+					></video>
 				</div>
 			</div>
 		</>
