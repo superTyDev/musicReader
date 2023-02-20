@@ -1,13 +1,7 @@
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import React, { useState, useRef } from "react";
-// import blink from "./../components/blink";
 import { usePdf } from "@mikecousins/react-pdf";
-import Webcam from "react-webcam";
-
-// const blink = dynamic(async () => await import("./../components/blink"), {
-// 	ssr: false,
-// });
 
 import styles from "../styles/Reader.module.css";
 import { useEffect } from "react";
@@ -60,18 +54,6 @@ function DisplayFiles({ files, setSelectedFile, directory }) {
 	}
 }
 
-async function initBlink() {
-	const Blink = (await import("../components/blink.ts")).default;
-
-	await Blink.loadModel();
-
-	const videoElement = document.querySelector("video");
-	await Blink.setUpCamera(videoElement);
-
-	const blinkPrediction = await Blink.getBlinkPrediction();
-	console.log("Blink: ", blinkPrediction);
-}
-
 export default function Reader() {
 	const [files, setFiles] = useState([]);
 	const [directory, setDirectory] = useState(null);
@@ -79,7 +61,10 @@ export default function Reader() {
 		"Nocturne Op. 72 Chopin.pdf"
 	);
 	const [page, setPage] = useState(1);
+	const [modelLoaded, setModelLoaded] = useState(false);
 	const canvasRef = useRef(null);
+	const requestRef = React.useRef();
+	const previousTimeRef = React.useRef();
 
 	const { pdfDocument, pdfPage } = usePdf({
 		file: selectedFile,
@@ -87,7 +72,34 @@ export default function Reader() {
 		canvasRef,
 	});
 
-	const videoRef = useRef(null);
+	let Blink = null;
+	async function initBlink() {
+		Blink = (await import("../components/blink")).default;
+
+		await Blink.loadModel();
+
+		const videoElement = document.querySelector("video");
+		await Blink.setUpCamera(videoElement);
+
+		requestRef.current = requestAnimationFrame(predictBlink);
+		setModelLoaded(true);
+		return () => cancelAnimationFrame(requestRef.current);
+	}
+
+	const predictBlink = async (time) => {
+		if (previousTimeRef.current != undefined) {
+			const deltaTime = time - previousTimeRef.current;
+
+			// Pass on a function to the setter of the state
+			// to make sure we always have the latest state
+			const blinkPrediction = await Blink.getBlinkPrediction();
+			if (blinkPrediction?.longBlink) {
+				setPage((page) => page + 1);
+			}
+		}
+		previousTimeRef.current = time;
+		requestRef.current = requestAnimationFrame(predictBlink);
+	};
 
 	useEffect(() => {
 		if (document.readyState === "complete") {
@@ -119,6 +131,7 @@ export default function Reader() {
 							Open Folder
 						</button>
 					)}
+
 					<div className={styles.folderList}>
 						<DisplayFiles
 							files={files}
@@ -127,6 +140,13 @@ export default function Reader() {
 						/>
 						<spacer />
 					</div>
+					{modelLoaded && (
+						<>
+							<p className={styles.isVisible}>
+								Vision On <i>visibility</i>
+							</p>
+						</>
+					)}
 				</div>
 				<div className={styles.mainCont} id="mainCont">
 					{!pdfDocument && <span>Loading...</span>}
@@ -162,7 +182,13 @@ export default function Reader() {
 					>
 						fullscreen
 					</i>
-					<video className={styles.videoBox} ref={videoRef}></video>
+					<video
+						className={styles.videoBox}
+						style={{ transform: "scaleX(-1)" }}
+						onClick={(e) => {
+							e.target.style.display = "none";
+						}}
+					></video>
 				</div>
 			</div>
 		</>
