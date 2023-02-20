@@ -61,7 +61,10 @@ export default function Reader() {
 		"Nocturne Op. 72 Chopin.pdf"
 	);
 	const [page, setPage] = useState(1);
+	const [modelLoaded, setModelLoaded] = useState(false);
 	const canvasRef = useRef(null);
+	const requestRef = React.useRef();
+	const previousTimeRef = React.useRef();
 
 	const { pdfDocument, pdfPage } = usePdf({
 		file: selectedFile,
@@ -77,24 +80,26 @@ export default function Reader() {
 
 		const videoElement = document.querySelector("video");
 		await Blink.setUpCamera(videoElement);
-		predictBlink();
+
+		requestRef.current = requestAnimationFrame(predictBlink);
+		setModelLoaded(true);
+		return () => cancelAnimationFrame(requestRef.current);
 	}
 
-	async function predictBlink() {
-		const blinkPrediction = await Blink.getBlinkPrediction();
-		// console.log("Blink: ", blinkPrediction);
-		if (blinkPrediction.blink) {
-			console.log("blink");
+	const predictBlink = async (time) => {
+		if (previousTimeRef.current != undefined) {
+			const deltaTime = time - previousTimeRef.current;
+
+			// Pass on a function to the setter of the state
+			// to make sure we always have the latest state
+			const blinkPrediction = await Blink.getBlinkPrediction();
+			if (blinkPrediction?.longBlink) {
+				setPage((page) => page + 1);
+			}
 		}
-		if (blinkPrediction.longBlink) {
-			console.log("longBlink");
-			setPage(page + 1);
-		}
-		if (blinkPrediction.wink) {
-			console.log("wink");
-		}
-		let raf = requestAnimationFrame(predictBlink);
-	}
+		previousTimeRef.current = time;
+		requestRef.current = requestAnimationFrame(predictBlink);
+	};
 
 	useEffect(() => {
 		if (document.readyState === "complete") {
@@ -126,6 +131,7 @@ export default function Reader() {
 							Open Folder
 						</button>
 					)}
+
 					<div className={styles.folderList}>
 						<DisplayFiles
 							files={files}
@@ -134,6 +140,13 @@ export default function Reader() {
 						/>
 						<spacer />
 					</div>
+					{modelLoaded && (
+						<>
+							<p className={styles.isVisible}>
+								Vision On <i>visibility</i>
+							</p>
+						</>
+					)}
 				</div>
 				<div className={styles.mainCont} id="mainCont">
 					{!pdfDocument && <span>Loading...</span>}

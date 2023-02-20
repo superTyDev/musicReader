@@ -132,3 +132,11 @@
 .videoBox:hover {
     filter: brightness(0.5) hue-rotate(315deg);
 }
+
+.isVisible {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+}

@@ -92,7 +92,7 @@ function isVoluntaryBlink(blinkDetected) {
 	// NOTE: adding this to distinguish intentional blinks
 	if (blinkDetected) {
 		blinkCount++;
-		if (blinkCount > 4) {
+		if (blinkCount > 8) {
 			blinkCount = 0;
 			return true;
 		}
