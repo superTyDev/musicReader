@@ -98,7 +98,7 @@ function isVoluntaryBlink(blinkDetected) {
         blinkCount++;
         if (blinkCount > blinkLength + repeatBlink) {
             blinkCount = 0;
-            repeatBlink = 32;
+            repeatBlink = 52;
             return true;
         }
     } else {
