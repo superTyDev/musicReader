@@ -8,9 +8,9 @@ let tempBlinkRate = 0;
 let rendering = true;
 let rateInterval;
 let canvas = document.createElement("canvas");
-const MOFF_THRESHOLD = 0.27;
+const MOFF_THRESHOLD = 0.2;
 
-let blinkLength = 4;
+let blinkLength = 1;
 let repeatBlink = 0;
 
 function initBlinkRateCalculator() {
@@ -98,7 +98,7 @@ function isVoluntaryBlink(blinkDetected) {
         blinkCount++;
         if (blinkCount > blinkLength + repeatBlink) {
             blinkCount = 0;
-            repeatBlink = 4 * blinkLength;
+            repeatBlink = 24;
             return true;
         }
     } else {
@@ -138,7 +138,7 @@ async function renderPrediction() {
 
             // const leftDepart = euclideanDist(p[75], p[61]) / lipWidth;
 
-            // console.log(`${leftDepart}`);
+            // console.log(`${Math.floor(lipOffset * 1000 / lipWidth) / 1000}`);
             let blinked = lipOffset / lipWidth > MOFF_THRESHOLD;
             if (blinked) {
                 updateBlinkRate();
