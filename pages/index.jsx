@@ -13,7 +13,9 @@ export default function EntryForm() {
 					<div className="header">
 						<h1>Music Reader Connect</h1>
 					</div>
-					<Link href="/reader">See viewer</Link>
+					<Link href="/reader">See viewer (control with mouth twitch)</Link>
+					<br />
+					<Link href="/blink">See viewer (control with eye blink)</Link>
 					<br />
 					<Link href="https://github.com/superTyDev/musicReader">
 						Checkout GitHub

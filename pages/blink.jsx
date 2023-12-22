@@ -1,0 +1,212 @@
+import Link from "next/link";
+import dynamic from "next/dynamic";
+import React, { useState, useRef } from "react";
+import { usePdf } from "@mikecousins/react-pdf";
+
+import styles from "../styles/Reader.module.css";
+import { useEffect } from "react";
+
+let newFile = false;
+
+async function openFolder(buttonEvent, files, setFiles, setDirectory) {
+	try {
+		var directory = await window.showDirectoryPicker({
+			startIn: "documents",
+		});
+
+		buttonEvent.target.style.display = "none";
+		console.log(directory.values());
+		var tempArray = [];
+		for await (const entry of directory.values()) {
+			if (entry.kind == "file" && entry.name.endsWith(".pdf")) {
+				tempArray.push(entry.name);
+			}
+		}
+		setDirectory(directory);
+		setFiles([...files, ...tempArray]);
+	} catch (e) {
+		console.log(e);
+	}
+}
+
+function DisplayFiles({ files, setSelectedFile, directory, setPage }) {
+	if (files.length) {
+		return (
+			<>
+				{files.map((file, index) => {
+					return (
+						<div
+							key={index}
+							onClick={(e) => {
+								directory.getFileHandle(file).then((pdfFile) => {
+									pdfFile.getFile().then((pdfStream) => {
+										console.log(pdfStream);
+										console.log(typeof pdfStream);
+										setSelectedFile(window.URL.createObjectURL(pdfStream));
+										newFile = true;
+									});
+								});
+							}}
+						>
+							{file.slice(0, -4)}
+						</div>
+					);
+				})}
+			</>
+		);
+	}
+}
+
+export default function Reader() {
+	const [files, setFiles] = useState([]);
+	const [directory, setDirectory] = useState(null);
+	const [selectedFile, setSelectedFile] = useState(
+		"Nocturne Op. 72 Chopin.pdf"
+	);
+	const [page, setPage] = useState(1);
+	const [modelLoaded, setModelLoaded] = useState(false);
+	const canvasRef = useRef(null);
+	const requestRef = React.useRef();
+	const previousTimeRef = React.useRef();
+
+	const { pdfDocument, pdfPage } = usePdf({
+		file: selectedFile,
+		page,
+		onDocumentLoadSuccess: newFile
+			? () => {
+					setPage(1);
+					newFile = false;
+			  }
+			: undefined,
+		canvasRef,
+	});
+
+	// useEffect(() => {
+	// 	setPage(1);
+	// 	// pdfPage?.render();
+	// 	// console.log(pdfPage);
+	// }, [pdfDocument]);
+
+	let Blink = null;
+	async function initBlink() {
+		Blink = (await import("../components/blink")).default;
+
+		await Blink.loadModel();
+
+		const videoElement = document.querySelector("video");
+		await Blink.setUpCamera(videoElement);
+
+		requestRef.current = requestAnimationFrame(predictBlink);
+		setModelLoaded(true);
+		return () => cancelAnimationFrame(requestRef.current);
+	}
+
+	const predictBlink = async (time) => {
+		if (previousTimeRef.current != undefined) {
+			const deltaTime = time - previousTimeRef.current;
+
+			// Pass on a function to the setter of the state
+			// to make sure we always have the latest state
+			const blinkPrediction = await Blink.getBlinkPrediction();
+			if (blinkPrediction?.longBlink) {
+				setPage((page) => page + 1);
+			}
+		}
+		previousTimeRef.current = time;
+		requestRef.current = requestAnimationFrame(predictBlink);
+	};
+
+	useEffect(() => {
+		if (document.readyState === "complete") {
+			initBlink();
+		} else {
+			window.addEventListener("load", initBlink);
+			return () => window.removeEventListener("load", initBlink);
+		}
+	}, []);
+
+	return (
+		<>
+			<div className="page">
+				<div className={styles.header}>
+					<h1>MC - Reader</h1>
+				</div>
+				<div className={styles.sideNav}>
+					<h2 style={{ textAlign: "center", borderBottom: "1px white solid" }}>
+						Files
+					</h2>
+					{!files.length && (
+						<button
+							id="addToFolder"
+							onClick={(e) => {
+								openFolder(e, files, setFiles, setDirectory);
+							}}
+							className="button"
+						>
+							Open Folder
+						</button>
+					)}
+
+					<div className={styles.folderList}>
+						<DisplayFiles
+							files={files}
+							setSelectedFile={setSelectedFile}
+							directory={directory}
+							setPage={setPage}
+						/>
+						<spacer />
+					</div>
+					{modelLoaded && (
+						<>
+							<p className={styles.isVisible}>
+								Vision On <i>visibility</i>
+							</p>
+						</>
+					)}
+				</div>
+				<div className={styles.mainCont} id="mainCont">
+					{!pdfDocument && <span>Loading...</span>}
+					<canvas className={styles.pdfCont} ref={canvasRef} />
+					{Boolean(pdfDocument && pdfDocument.numPages) && (
+						<nav className={styles.pagerCont}>
+							<button
+								className="previous button"
+								disabled={page === 1}
+								onClick={() => setPage(page - 1)}
+							>
+								Previous
+							</button>
+							<div>{page}</div>
+							<button
+								className="next button"
+								disabled={page === pdfDocument.numPages}
+								onClick={() => setPage(page + 1)}
+							>
+								Next
+							</button>
+						</nav>
+					)}
+					<i
+						className={styles.fullscreen}
+						onClick={(e) => {
+							if (document.fullscreenElement) {
+								document.exitFullscreen();
+							} else {
+								document.getElementById("mainCont").requestFullscreen();
+							}
+						}}
+					>
+						fullscreen
+					</i>
+					<video
+						className={styles.videoBox}
+						style={{ transform: "scaleX(-1)" }}
+						onClick={(e) => {
+							e.target.style.display = "none";
+						}}
+					></video>
+				</div>
+			</div>
+		</>
+	);
+}
