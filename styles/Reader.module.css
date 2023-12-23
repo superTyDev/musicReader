@@ -73,9 +73,11 @@
 }
 
 .pdfCont {
-    padding-top: 50px;
+    margin-top: 50px;
+    scroll-margin-top: 50px;
     height: calc(100vh - 100px);
     overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .pdfPage canvas {
@@ -83,7 +85,6 @@
     height: 100% !important;
     max-height: calc(100vh - 100px);
     object-fit: contain;
-    scroll-margin-top: -100px;
 }
 
 .pagerCont {

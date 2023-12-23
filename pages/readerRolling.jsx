@@ -83,7 +83,10 @@ export default function Reader() {
     const numPagesRef = React.useRef(null);
     const pageRef = React.useRef(1);
 
-    const [pageCont, setPageCont] = useState([<Page pageNumber={pageRef.current} className={styles.pdfPage}/>, <Page pageNumber={pageRef.current + 1} className={styles.pdfPage}/>]);
+    const [pageCont, setPageCont] = useState([
+        <Page pageNumber={pageRef.current} className={styles.pdfPage} />,
+        <Page pageNumber={pageRef.current + 1} className={styles.pdfPage} />,
+    ]);
 
     function onDocumentLoadSuccess({ numPages }) {
         setNumPages(numPages);
@@ -94,16 +97,22 @@ export default function Reader() {
         if (state == "next") {
             pageRef.current = page + 1;
             setPage((page) => page + 1);
-            setPageCont((oldPages) => oldPages.concat(<Page pageNumber={pageRef.current + 1} className={styles.pdfPage}/>));
-            document.getElementsByClassName(styles.pdfPage)[pageRef.current - 1]?.scrollIntoView({behavior: "smooth", block: "start"});
+            console.log(pageRef.current);
+            document
+                .getElementsByClassName(styles.pdfPage)
+                [pageRef.current - 1].scrollIntoView();
         } else if (state == "previous") {
             pageRef.current = page - 1;
             setPage((page) => page - 1);
-            // setPageCont((oldPages) => [<Page pageNumber={pageRef.current} className={styles.pdfPage}/>].concat(oldPages.slice(0, 1).concat()));
+            document
+                .getElementsByClassName(styles.pdfPage)
+                [pageRef.current - 1]?.scrollIntoView();
         } else if (state == "reset") {
             pageRef.current = 1;
             setPage(1);
-            // setPageCont([<Page pageNumber={pageRef.current} className={styles.pdfPage}/>, <Page pageNumber={pageRef.current + 1} className={styles.pdfPage}/>]);
+            document
+                .getElementsByClassName(styles.pdfPage)
+                [pageRef.current - 1]?.scrollIntoView({ behavior: "smooth" });
         }
     }
 
@@ -200,7 +209,15 @@ export default function Reader() {
                         onLoadSuccess={onDocumentLoadSuccess}
                         className={styles.pdfCont}
                     >
-                        {pageCont.map((page) => page)}
+                        {Array.from(new Array(numPages), (el, index) => (
+                            <Page
+                                key={`page_${index + 1}`}
+                                pageNumber={index + 1}
+                                className={styles.pdfPage}
+                            />
+                        ))}
+                        {/* {pageCont.map((page) => page)} */}
+
                         {/* <Page pageNumber={page} className={styles.pdfPage}/> */}
                         {/* <Page pageNumber={page + 1} className={styles.pdfPage}/> */}
                     </Document>
