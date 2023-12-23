@@ -83,11 +83,6 @@ export default function Reader() {
     const numPagesRef = React.useRef(null);
     const pageRef = React.useRef(1);
 
-    const [pageCont, setPageCont] = useState([
-        <Page pageNumber={pageRef.current} className={styles.pdfPage} />,
-        <Page pageNumber={pageRef.current + 1} className={styles.pdfPage} />,
-    ]);
-
     function onDocumentLoadSuccess({ numPages }) {
         setNumPages(numPages);
         numPagesRef.current = numPages;
