@@ -75,35 +75,44 @@ export default function ReaderRolling() {
     const requestRef = React.useRef();
     const previousTimeRef = React.useRef();
 
-    const [numPages, setNumPages] = useState(null);
-    const [page, setPage] = useState(1);
     let numPagesRef = React.useRef(4);
     let pageRef = React.useRef(1);
+    const [numPages, setNumPages] = useState(numPagesRef.current);
+    const [page, setPage] = useState(pageRef.current);
 
     function onDocumentLoadSuccess({ numPages }) {
+        pageRef.current = 1;
+        setPage(pageRef.current);
         setNumPages(numPages);
         numPagesRef.current = numPages;
     }
 
     function alterPage(state) {
+        let valid = true;
         if (state == "next") {
             pageRef.current += 1;
-            setPage(pageRef.current);
-            document
-                .getElementsByClassName(styles.pdfPage)
-                [pageRef.current - 1].scrollIntoView();            
         } else if (state == "previous") {
             pageRef.current += -1;
+        } else if (state == "reset") {
+            pageRef.current = 1;
+        } else if (parseInt(state) != NaN) {
+            pageRef.current = parseInt(state);
+        } else {
+            valid = false;
+        }
+
+        if (valid) {
+            // Clamp Value to 1 and numPages
+            pageRef.current = Math.min(
+                Math.max(pageRef.current, 1),
+                numPagesRef.current
+            );
+
+            // Set Page
             setPage(pageRef.current);
             document
                 .getElementsByClassName(styles.pdfPage)
-                [pageRef.current - 1].scrollIntoView();
-        } else if (state == "reset") {
-            pageRef.current = 1;
-            setPage(1);
-            document
-                .getElementsByClassName(styles.pdfPage)
-                [pageRef.current - 1].scrollIntoView({ behavior: "smooth" });
+                [pageRef.current - 1]?.scrollIntoView();
         }
     }
 
@@ -129,9 +138,15 @@ export default function ReaderRolling() {
             // to make sure we always have the latest state
             const mouthPrediction = await Mouth.getMouthPrediction();
             if (mouthPrediction?.longSignal) {
-                if (pageRef.current < numPagesRef.current && mouthPrediction.direction == "right") {
+                if (
+                    pageRef.current < numPagesRef.current &&
+                    mouthPrediction.direction == "right"
+                ) {
                     alterPage("next");
-                } else if (pageRef.current > 1 && mouthPrediction.direction == "left") {
+                } else if (
+                    pageRef.current > 1 &&
+                    mouthPrediction.direction == "left"
+                ) {
                     alterPage("previous");
                 }
             }
@@ -153,7 +168,7 @@ export default function ReaderRolling() {
         <>
             <div className="page">
                 <div className={styles.header}>
-                    <Link href="/"><h1>MC - Reader</h1></Link>
+                    <h1>MC - Reader</h1>
                 </div>
                 <div className={styles.sideNav}>
                     <h2
@@ -216,7 +231,15 @@ export default function ReaderRolling() {
                             Previous
                         </button>
                         <div>
-                            {page} / {numPages}
+                            <input
+                                value={page}
+                                onChange={(e) => {
+                                    alterPage(e.target.value);
+                                }}
+                                type="number"
+                            />
+                            {" / "}
+                            {numPages}
                         </div>
                         <button
                             className="next button"
@@ -233,7 +256,7 @@ export default function ReaderRolling() {
                             <i style={{ fontSize: "inherit" }}>restart_alt</i>
                         </button>
                     </nav>
-                    <i 
+                    <i
                         className={styles.fullscreen}
                         onClick={(e) => {
                             if (document.fullscreenElement) {

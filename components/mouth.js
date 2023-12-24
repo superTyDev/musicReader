@@ -8,7 +8,7 @@ let tempTurnRate = 0;
 let rendering = true;
 let rateInterval;
 let canvas = document.createElement("canvas");
-const MOFF_THRESHOLD = 0.3;
+const MOFF_THRESHOLD = 0.28;
 
 let turnLength = 1;
 let repeatTurn = 0;
@@ -129,7 +129,7 @@ async function renderPrediction() {
             const lipWidth = euclideanDist(lipLeft, lipRight);
 
             let turned = Math.abs(lipOffset / lipWidth) > MOFF_THRESHOLD;
-            console.log(`${lipOffset > 0 ? "left " : "right"}: ${turned ? "yes" : "no "}: ${Math.floor(Math.abs(lipOffset / lipWidth) * 100) / 100}`);
+            // console.log(`${lipOffset > 0 ? "left " : "right"}: ${turned ? "yes" : "no "}: ${Math.floor(Math.abs(lipOffset / lipWidth) * 100) / 100}`);
 
             if (turned) {
                 updateTurnRate();
