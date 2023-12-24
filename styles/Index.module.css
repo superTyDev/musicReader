@@ -9,3 +9,17 @@
     padding: 10px 20px;
     border-radius: 10px;
 }
+
+.linkCont {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0;
+}
+
+.linkCont a {
+    padding: 10px;
+    text-decoration: none;
+    color: inherit;
+    text-align: center;
+}

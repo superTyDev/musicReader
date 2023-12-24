@@ -1,22 +1,22 @@
 import * as faceLandmarksDetection from "@tensorflow-models/face-landmarks-detection";
 import "@tensorflow/tfjs-backend-webgl";
 
-let detector, video, event, blinkRate;
+let detector, video, event, turnRate;
 const VIDEO_SIZE = 500;
-let blinkCount = 0;
-let tempBlinkRate = 0;
+let turnCount = 0;
+let tempTurnRate = 0;
 let rendering = true;
 let rateInterval;
 let canvas = document.createElement("canvas");
-const MOFF_THRESHOLD = 0.2;
+const MOFF_THRESHOLD = 0.3;
 
-let blinkLength = 1;
-let repeatBlink = 0;
+let turnLength = 1;
+let repeatTurn = 0;
 
-function initBlinkRateCalculator() {
+function initTurnRateCalculator() {
     rateInterval = setInterval(() => {
-        blinkRate = tempBlinkRate * 6;
-        tempBlinkRate = 0;
+        turnRate = tempTurnRate * 6;
+        tempTurnRate = 0;
     }, 10000);
 }
 
@@ -62,7 +62,7 @@ const setUpCamera = async (videoElement) => {
     return new Promise((resolve) => {
         video.onloadedmetadata = () => {
             resolve(video);
-            initBlinkRateCalculator();
+            initTurnRateCalculator();
         };
     });
 };
@@ -71,8 +71,8 @@ function stopPrediction() {
     rendering = false;
     clearInterval(rateInterval);
 }
-function updateBlinkRate() {
-    tempBlinkRate++;
+function updateTurnRate() {
+    tempTurnRate++;
 }
 
 function euclideanDist(p1, p2) {
@@ -84,26 +84,20 @@ function euclideanDist(p1, p2) {
     return Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
 }
 
-function getEAR(p) {
-    return (
-        (euclideanDist(p[1], p[5]) + euclideanDist(p[2], p[4])) /
-        (2 * euclideanDist(p[0], p[3]))
-    );
-}
+function isVoluntaryTurn(turnDetected) {
+    // NOTE: checking if blink is detected in consecutive cycles
+    // NOTE: also increase time between triggers
 
-function isVoluntaryBlink(blinkDetected) {
-    // NOTE: checking if blink is detected in at least 5 consecutive cycles, values lesser than that can be considered a normal blink.
-    // NOTE: adding this to distinguish intentional blinks
-    if (blinkDetected) {
-        blinkCount++;
-        if (blinkCount > blinkLength + repeatBlink) {
-            blinkCount = 0;
-            repeatBlink = 52;
+    if (turnDetected) {
+        turnCount++;
+        if (turnCount > turnLength + repeatTurn) {
+            turnCount = 0;
+            repeatTurn = 60;
             return true;
         }
     } else {
-        blinkCount = 0;
-        repeatBlink = 0;
+        turnCount = 0;
+        repeatTurn = 0;
     }
     return false;
 }
@@ -117,7 +111,6 @@ async function renderPrediction() {
 
     if (predictions.length > 0) {
         predictions.forEach((prediction) => {
-            // NOTE: Error in docs, rightEyeLower0 is mapped to rightEyeUpper0 and vice-versa
             const p = prediction.keypoints;
             const p1 = p[10];
             const p2 = p[152];
@@ -127,26 +120,25 @@ async function renderPrediction() {
             const p0 = { x: (lip1.x + lip2.x) / 2, y: (lip1.y + lip2.y) / 2 };
 
             const lipOffset =
-                Math.abs(
-                    (p2.x - p1.x) * (p1.y - p0.y) -
-                        (p1.x - p0.x) * (p2.y - p1.y)
-                ) / euclideanDist(p1, p2);
+                ((p2.x - p1.x) * (p1.y - p0.y) -
+                    (p1.x - p0.x) * (p2.y - p1.y)) /
+                euclideanDist(p1, p2);
 
             const lipLeft = p[61];
             const lipRight = p[291];
             const lipWidth = euclideanDist(lipLeft, lipRight);
 
-            // const leftDepart = euclideanDist(p[75], p[61]) / lipWidth;
+            let turned = Math.abs(lipOffset / lipWidth) > MOFF_THRESHOLD;
+            console.log(`${lipOffset > 0 ? "left " : "right"}: ${turned ? "yes" : "no "}: ${Math.floor(Math.abs(lipOffset / lipWidth) * 100) / 100}`);
 
-            // console.log(`${Math.floor(lipOffset * 1000 / lipWidth) / 1000}`);
-            let blinked = lipOffset / lipWidth > MOFF_THRESHOLD;
-            if (blinked) {
-                updateBlinkRate();
+            if (turned) {
+                updateTurnRate();
             }
             event = {
-                signal: blinked,
-                longSignal: isVoluntaryBlink(blinked),
-                rate: blinkRate,
+                signal: turned,
+                longSignal: isVoluntaryTurn(turned),
+                rate: turnRate,
+                direction: lipOffset > 0 ? "left" : "right",
             };
         });
     }

@@ -1,6 +1,6 @@
 "use client";
 
-import dynamic from "next/dynamic";
+import Link from "next/link";
 import React, { useState, useRef } from "react";
 
 import styles from "../styles/Reader.module.css";
@@ -10,13 +10,7 @@ import { pdfjs, Document, Page } from "react-pdf";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css";
 
-// pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-//     "pdfjs-dist/build/pdf.worker.min.js",
-//     import.meta.url
-// ).toString();
-// pdfjs.GlobalWorkerOptions.workerSrc = "pdfjs-dist/build/pdf.worker.min.js";
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
-// pdfjs.GlobalWorkerOptions.workerSrc = `./pdf.worker.min.js`;
 
 async function openFolder(buttonEvent, files, setFiles, setDirectory) {
     try {
@@ -83,8 +77,8 @@ export default function ReaderRolling() {
 
     const [numPages, setNumPages] = useState(null);
     const [page, setPage] = useState(1);
-    const numPagesRef = React.useRef(null);
-    const pageRef = React.useRef(1);
+    let numPagesRef = React.useRef(4);
+    let pageRef = React.useRef(1);
 
     function onDocumentLoadSuccess({ numPages }) {
         setNumPages(numPages);
@@ -93,24 +87,23 @@ export default function ReaderRolling() {
 
     function alterPage(state) {
         if (state == "next") {
-            pageRef.current = page + 1;
-            setPage((page) => page + 1);
-            console.log(pageRef.current);
+            pageRef.current += 1;
+            setPage(pageRef.current);
+            document
+                .getElementsByClassName(styles.pdfPage)
+                [pageRef.current - 1].scrollIntoView();            
+        } else if (state == "previous") {
+            pageRef.current += -1;
+            setPage(pageRef.current);
             document
                 .getElementsByClassName(styles.pdfPage)
                 [pageRef.current - 1].scrollIntoView();
-        } else if (state == "previous") {
-            pageRef.current = page - 1;
-            setPage((page) => page - 1);
-            document
-                .getElementsByClassName(styles.pdfPage)
-                [pageRef.current - 1]?.scrollIntoView();
         } else if (state == "reset") {
             pageRef.current = 1;
             setPage(1);
             document
                 .getElementsByClassName(styles.pdfPage)
-                [pageRef.current - 1]?.scrollIntoView({ behavior: "smooth" });
+                [pageRef.current - 1].scrollIntoView({ behavior: "smooth" });
         }
     }
 
@@ -136,11 +129,10 @@ export default function ReaderRolling() {
             // to make sure we always have the latest state
             const mouthPrediction = await Mouth.getMouthPrediction();
             if (mouthPrediction?.longSignal) {
-                console.log(
-                    `Trigger: ${pageRef.current} < ${numPagesRef.current}`
-                );
-                if (pageRef.current < numPagesRef.current) {
+                if (pageRef.current < numPagesRef.current && mouthPrediction.direction == "right") {
                     alterPage("next");
+                } else if (pageRef.current > 1 && mouthPrediction.direction == "left") {
+                    alterPage("previous");
                 }
             }
         }
@@ -161,7 +153,7 @@ export default function ReaderRolling() {
         <>
             <div className="page">
                 <div className={styles.header}>
-                    <h1>MC - Reader</h1>
+                    <Link href="/"><h1>MC - Reader</h1></Link>
                 </div>
                 <div className={styles.sideNav}>
                     <h2

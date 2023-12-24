@@ -13,6 +13,11 @@
     color: white;
 }
 
+.header a {
+    text-decoration: none;
+    color: inherit;
+}
+
 .sideNav {
     width: max(min(200px, 10vw), 80px);
     height: calc(100vh - 50px);
