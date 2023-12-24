@@ -10,10 +10,13 @@ import { pdfjs, Document, Page } from "react-pdf";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css";
 
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-    "pdfjs-dist/build/pdf.worker.min.js",
-    import.meta.url
-).toString();
+// pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+//     "pdfjs-dist/build/pdf.worker.min.js",
+//     import.meta.url
+// ).toString();
+// pdfjs.GlobalWorkerOptions.workerSrc = "pdfjs-dist/build/pdf.worker.min.js";
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+// pdfjs.GlobalWorkerOptions.workerSrc = `./pdf.worker.min.js`;
 
 async function openFolder(buttonEvent, files, setFiles, setDirectory) {
     try {
@@ -67,7 +70,7 @@ function DisplayFiles({ files, setSelectedFile, directory, setPage }) {
     }
 }
 
-export default function Reader() {
+export default function ReaderRolling() {
     const [files, setFiles] = useState([]);
     const [directory, setDirectory] = useState(null);
     const [selectedFile, setSelectedFile] = useState(
@@ -133,9 +136,9 @@ export default function Reader() {
             // to make sure we always have the latest state
             const mouthPrediction = await Mouth.getMouthPrediction();
             if (mouthPrediction?.longSignal) {
-                // console.log(
-                //     `Trigger: ${pageRef.current} < ${numPagesRef.current}`
-                // );
+                console.log(
+                    `Trigger: ${pageRef.current} < ${numPagesRef.current}`
+                );
                 if (pageRef.current < numPagesRef.current) {
                     alterPage("next");
                 }
@@ -211,10 +214,6 @@ export default function Reader() {
                                 className={styles.pdfPage}
                             />
                         ))}
-                        {/* {pageCont.map((page) => page)} */}
-
-                        {/* <Page pageNumber={page} className={styles.pdfPage}/> */}
-                        {/* <Page pageNumber={page + 1} className={styles.pdfPage}/> */}
                     </Document>
                     <nav className={styles.pagerCont}>
                         <button
@@ -242,7 +241,7 @@ export default function Reader() {
                             <i style={{ fontSize: "inherit" }}>restart_alt</i>
                         </button>
                     </nav>
-                    <i
+                    <i 
                         className={styles.fullscreen}
                         onClick={(e) => {
                             if (document.fullscreenElement) {
