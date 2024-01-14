@@ -8,7 +8,7 @@ let tempTurnRate = 0;
 let rendering = true;
 let rateInterval;
 let canvas = document.createElement("canvas");
-const MOFF_THRESHOLD = 0.28;
+const MOFF_THRESHOLD = 0.25;
 
 let turnLength = 1;
 let repeatTurn = 0;
@@ -48,7 +48,7 @@ const setUpCamera = async (videoElement) => {
         video: {
             facingMode: "user",
             deviceId: cameraId,
-            width: VIDEO_SIZE,
+            width: VIDEO_SIZE * 2,
             height: VIDEO_SIZE,
         },
     });
@@ -56,7 +56,7 @@ const setUpCamera = async (videoElement) => {
     video.srcObject = stream;
 
     video.play();
-    video.width = VIDEO_SIZE;
+    video.width = VIDEO_SIZE * 2;
     video.height = VIDEO_SIZE;
 
     return new Promise((resolve) => {
