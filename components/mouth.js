@@ -2,7 +2,7 @@ import * as faceLandmarksDetection from "@tensorflow-models/face-landmarks-detec
 import "@tensorflow/tfjs-backend-webgl";
 
 let detector, video, event, turnRate;
-const VIDEO_SIZE = 500;
+const VIDEO_SIZE = 500*2;
 let turnCount = 0;
 let tempTurnRate = 0;
 let rendering = true;
@@ -48,7 +48,7 @@ const setUpCamera = async (videoElement) => {
         video: {
             facingMode: "user",
             deviceId: cameraId,
-            width: VIDEO_SIZE * 2,
+            width: VIDEO_SIZE,
             height: VIDEO_SIZE,
         },
     });
@@ -56,7 +56,7 @@ const setUpCamera = async (videoElement) => {
     video.srcObject = stream;
 
     video.play();
-    video.width = VIDEO_SIZE * 2;
+    video.width = VIDEO_SIZE;
     video.height = VIDEO_SIZE;
 
     return new Promise((resolve) => {
