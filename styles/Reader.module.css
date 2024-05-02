@@ -49,7 +49,7 @@
 
 .fullscreen {
     position: fixed;
-    z-index: 1;
+    transition: all 0.5s;
     width: 40px;
     height: 40px;
     border-radius: 50%;
@@ -103,9 +103,9 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0 20px;
+    padding: 0 10px;
     display: flex;
-    gap: 20px;
+    gap: 10px;
 }
 
 .mainCont:fullscreen .pdfCont {
@@ -121,7 +121,7 @@
     top: 0;
 }
 
-.pagerCont>* {
+.pagerCont > * {
     padding: 10px;
 }
 
@@ -145,7 +145,7 @@
     right: 20px;
     bottom: 20px;
     object-fit: contain;
-    transition: .5s all;
+    transition: 0.5s all;
 }
 
 .videoBox:hover {
@@ -158,4 +158,88 @@
     align-items: center;
     justify-content: center;
     margin-bottom: 10px;
+}
+
+.modal {
+    position: fixed;
+    z-index: 4;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #fff;
+    box-shadow: 5px 5px 10px 0 rgba(0, 0, 0, 0.5);
+    min-height: 300px;
+    min-width: 300px;
+    border-radius: 5px;
+    padding: 10px;
+}
+
+.modalBackground {
+    inset: 0;
+    position: fixed;
+    background-color: #000000aa;
+    z-index: 3;
+}
+
+.modal .modalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+}
+
+.modal .formItem {
+    display: flex;
+    margin: 6px 0;
+    gap: 5px;
+    align-items: baseline;
+}
+.modal input[type="text"],
+.submitButton {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 8px;
+    flex: 1;
+    border: 1px solid #555;
+    border-radius: 5px;
+}
+
+.modal .modalBody {
+    padding: 10px;
+}
+
+.errorMessage {
+    color: red;
+}
+
+/* width is less than 500px */
+@media screen and (max-width: 500px) {
+    .sideNav {
+        background-color: #000000dd;
+        z-index: 1;
+    }
+    .mainCont {
+        width: 100vw;
+    }
+
+    .pagerCont {
+        width: 100vw;
+    }
+
+    .pagerCont input {
+        width: 50px;
+    }
+    .pdfPage canvas {
+        width: 100% !important;
+    }
+    .fullscreen {
+        left: 100px;
+        background-color: #00000044;
+    }
+    .mainCont:fullscreen .fullscreen {
+        left: 20px;
+        background-color: #00000022;
+    }
 }

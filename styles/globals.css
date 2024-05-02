@@ -1,53 +1,54 @@
 @import url("https://fonts.googleapis.com/css?family=Roboto&display=swap");
 
 :root {
-  --dark-color-a: #000000;
-  --dark-color-b: #272728;
-  --light-color: #92ff77;
-  --success-color: #65ce65;
-  --error-color: #df3832;
+    --dark-color-a: #000000;
+    --dark-color-b: #272728;
+    --light-color: #92ff77;
+    --success-color: #65ce65;
+    --error-color: #df3832;
 }
 
 * {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
 body {
-  font-family: "Roboto", sans-serif;
-  font-size: 16px;
-  background: var(--light-color);
-  margin: 0px;
-  height: 100vh;
+    font-family: "Roboto", sans-serif;
+    font-size: 16px;
+    background: var(--light-color);
+    margin: 0px;
+    height: 100vh;
 }
 
 spacer {
-  flex: 1;
+    flex: 1;
 }
 
-i, .icon {
-  font-family: "Material Symbols Outlined";
-  font-weight: normal;
-  font-style: normal;
-  font-size: 24px;
-  display: inline-block;
-  line-height: 1;
-  text-transform: none;
-  letter-spacing: normal;
-  word-wrap: normal;
-  white-space: nowrap;
-  direction: ltr;
+i,
+.icon {
+    font-family: "Material Symbols Outlined";
+    font-weight: normal;
+    font-style: normal;
+    font-size: 24px;
+    display: inline-block;
+    line-height: 1;
+    text-transform: none;
+    letter-spacing: normal;
+    word-wrap: normal;
+    white-space: nowrap;
+    direction: ltr;
 }
 
 .button {
-  width: 100%;
-  padding: 10px;
-  border: none;
-  background-color: #f19693;
-  box-shadow: 2px 2px 2px #00000055;
+    width: 100%;
+    padding: 10px;
+    border: none;
+    background-color: #f19693;
+    box-shadow: 2px 2px 2px #00000055;
 }
 
 .button:hover {
-  background-color: #da6c68;
+    background-color: #da6c68;
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { sql } from "@vercel/postgres";
 import React, { useState, useRef } from "react";
 
 import styles from "../styles/Reader.module.css";
@@ -14,9 +15,7 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/b
 
 async function openFolder(buttonEvent, files, setFiles, setDirectory) {
     try {
-        var directory = await window.showDirectoryPicker({
-            startIn: "documents",
-        });
+        var directory = await window.showDirectoryPicker();
 
         buttonEvent.target.style.display = "none";
         console.log(directory.values());
@@ -31,6 +30,57 @@ async function openFolder(buttonEvent, files, setFiles, setDirectory) {
     } catch (e) {
         console.log(e);
     }
+}
+
+async function getCloudFiles(buttonEvent, files, setFiles) {
+    buttonEvent.target.style.display = "none";
+    var client_name = "-";
+    var clean_name = client_name.replace(/[^a-zA-Z0-9]/g, "");
+
+    while (client_name != clean_name) {
+        client_name = prompt("Enter Client Name (Alphanumeric Only) ");
+        if (client_name == null) {
+            return;
+        }
+        clean_name = client_name.replace(/[^a-zA-Z0-9]/g, "");
+    }
+
+    const response = await fetch(
+        `/api/getCloudFiles?client_name=${clean_name}`,
+        {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        }
+    );
+
+    const result = await response.json();
+    console.log(result);
+    setFiles([...files, ...result]);
+}
+
+async function uploadFile(clientName, fileName, directory) {
+    directory.getFileHandle(fileName).then((pdfFile) => {
+        pdfFile.getFile().then(async (pdfStream) => {
+            const pdfBuffer = await pdfStream.arrayBuffer();
+            // const pdfBytes = new Uint8Array(pdfBuffer);
+
+            const formData = new FormData();
+            formData.append("clientName", clientName);
+            formData.append("fileName", fileName);
+            formData.append("fileData", pdfBuffer);
+
+            const response = await fetch("/api/uploadFile", {
+                method: "POST",
+                body: formData,
+                type: "multipart/form-data",
+            });
+
+            const result = await response.json();
+            console.log("File uploaded with ID:", result.id);
+        });
+    });
 }
 
 function DisplayFiles({ files, setSelectedFile, directory, setPage }) {
@@ -64,6 +114,107 @@ function DisplayFiles({ files, setSelectedFile, directory, setPage }) {
     }
 }
 
+function UploadCloudFiles({ files, directory, open, setOpen }) {
+    const [clientName, setClientName] = useState("");
+    const [errorMessage, setErrorMessage] = useState("");
+
+    if (files.length && open) {
+        return (
+            <>
+                <div
+                    className={styles.modalBackground}
+                    onClick={(e) => setOpen(false)}
+                ></div>
+                <div class={styles.modal}>
+                    <h2 class={styles.modalHeader}>
+                        Upload Files to Cloud <i>cloud</i>
+                    </h2>
+                    <div className={styles.formItem}>
+                        <label htmlFor="clientName">Client Name:</label>
+                        <input
+                            type="text"
+                            name="clientName"
+                            value={clientName}
+                            onChange={(e) => {
+                                var clean_name = e.target.value.replace(
+                                    /[^a-zA-Z0-9]/g,
+                                    ""
+                                );
+                                if (clean_name != e.target.value) {
+                                    setErrorMessage(
+                                        "Client Name must be alphanumeric"
+                                    );
+                                } else {
+                                    setErrorMessage("");
+                                }
+                                setClientName(clean_name);
+                            }}
+                        />
+                    </div>
+                    <p class={styles.errorMessage}>{errorMessage}</p>
+                    <div className={styles.modalBody}>
+                        {files.map((file, index) => {
+                            return (
+                                <div class={styles.formItem} key={index}>
+                                    <input
+                                        type="checkbox"
+                                        id={file.slice(0, -4)}
+                                        name="cloudFiles"
+                                        value={file.slice(0, -4)}
+                                    />
+                                    <label htmlFor={file.slice(0, -4)}>
+                                        {file.slice(0, -4)}
+                                    </label>
+                                </div>
+                            );
+                        })}
+                    </div>
+                    <div className={styles.formItem}>
+                        <button
+                            type="submit"
+                            class={styles.submitButton}
+                            onClick={async (e) => {
+                                e.preventDefault();
+
+                                if (clientName.length == 0) {
+                                    setErrorMessage("Client Name is Empty");
+                                    return;
+                                }
+
+                                var numUploaded = 0;
+                                var checkboxes =
+                                    document.getElementsByName("cloudFiles");
+
+                                for (var i = 0; i < checkboxes.length; i++) {
+                                    if (checkboxes[i].checked) {
+                                        console.log(
+                                            `Uploading ${i}: ${directory}${checkboxes[i].value}.pdf as ${clientName}`
+                                        );
+                                        uploadFile(
+                                            clientName,
+                                            checkboxes[i].value + ".pdf",
+                                            directory
+                                        );
+                                        numUploaded += 1;
+                                    }
+                                }
+                                if (numUploaded == 0) {
+                                    setErrorMessage("No Files Selected");
+                                } else {
+                                    setOpen(false);
+                                }
+                            }}
+                        >
+                            Upload <i>upload</i>
+                        </button>
+                    </div>
+                </div>
+            </>
+        );
+    }
+    return <></>;
+}
+
 export default function ReaderRolling() {
     const [files, setFiles] = useState([]);
     const [directory, setDirectory] = useState(null);
@@ -74,6 +225,7 @@ export default function ReaderRolling() {
     const canvasRef = useRef(null);
     const requestRef = React.useRef();
     const previousTimeRef = React.useRef();
+    const [cloudIsOpen, setCloudIsOpen] = useState(false);
 
     let numPagesRef = React.useRef(4);
     let pageRef = React.useRef(1);
@@ -180,15 +332,44 @@ export default function ReaderRolling() {
                         Files
                     </h2>
                     {!files.length && (
-                        <button
-                            id="addToFolder"
-                            onClick={(e) => {
-                                openFolder(e, files, setFiles, setDirectory);
-                            }}
-                            className="button"
-                        >
-                            Open Folder
-                        </button>
+                        <>
+                            <button
+                                id="addToFolder"
+                                onClick={(e) => {
+                                    openFolder(
+                                        e,
+                                        files,
+                                        setFiles,
+                                        setDirectory
+                                    );
+                                }}
+                                className="button"
+                            >
+                                Open Folder
+                            </button>
+                            <button
+                                id="addToFolder"
+                                onClick={(e) => {
+                                    getCloudFiles(e, files, setFiles);
+                                }}
+                                className="button"
+                            >
+                                Open Cloud Files
+                            </button>
+                        </>
+                    )}
+                    {files.length != 0 && (
+                        <>
+                            <button
+                                id="addToFolder"
+                                onClick={(e) => {
+                                    setCloudIsOpen(true);
+                                }}
+                                className="button"
+                            >
+                                Upload to Cloud
+                            </button>
+                        </>
                     )}
 
                     <div className={styles.folderList}>
@@ -278,6 +459,12 @@ export default function ReaderRolling() {
                         }}
                     ></video>
                 </div>
+                <UploadCloudFiles
+                    files={files}
+                    directory={directory}
+                    open={cloudIsOpen}
+                    setOpen={setCloudIsOpen}
+                />
             </div>
         </>
     );
