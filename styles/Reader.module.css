@@ -33,6 +33,10 @@
     overflow: hidden;
 }
 
+.sideNav button {
+    margin-bottom: 5px;
+}
+
 .folderList {
     overflow-x: auto;
     display: flex;
@@ -195,12 +199,14 @@
     align-items: baseline;
 }
 .modal input[type="text"],
+.sideNav input[type="text"],
 .submitButton {
     display: flex;
     align-items: center;
     justify-content: space-between;
 
     padding: 8px;
+    width: 100%;
     flex: 1;
     border: 1px solid #555;
     border-radius: 5px;

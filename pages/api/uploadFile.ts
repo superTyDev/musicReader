@@ -8,27 +8,21 @@ export default async function handler(
     const body = request.body as HandleUploadBody;
 
     try {
+        // upload to specific user folder
         const jsonResponse = await handleUpload({
             body,
             request,
             onBeforeGenerateToken: async (
-                pathname
-                /* clientPayload */
+                pathname="testFolder/myFile.jpg",
             ) => {
-                // Generate a client token for the browser to upload the file
-                // ⚠️ Authenticate and authorize users before generating the token.
-                // Otherwise, you're allowing anonymous uploads.
-
                 return {
                     allowedContentTypes: [
                         "image/jpeg",
                         "image/png",
                         "image/gif",
+                        "application/pdf"
                     ],
-                    tokenPayload: JSON.stringify({
-                        // optional, sent to your server on upload completion
-                        // you could pass a user id from auth, or a value from clientPayload
-                    }),
+                    tokenPayload: JSON.stringify({}),
                 };
             },
             onUploadCompleted: async ({ blob, tokenPayload }) => {
