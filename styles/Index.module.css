@@ -12,12 +12,14 @@
 
 .linkCont {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 10px;
     margin: 10px 0;
 }
 
 .linkCont a {
+    flex: 1 0 300px;
     padding: 10px;
     text-decoration: none;
     color: inherit;

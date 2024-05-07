@@ -2,3 +2,5 @@ node_modules
 .next
 settings.json
 trash
+.vercel
+.env.development.local
