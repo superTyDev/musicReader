@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { sql } from "@vercel/postgres";
 import React, { useState, useRef } from "react";
 
 import styles from "../styles/Reader.module.css";
@@ -13,16 +12,21 @@ import "react-pdf/dist/esm/Page/TextLayer.css";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
-async function openFolder(buttonEvent, files, setFiles, setDirectory) {
+async function openFolder(files, setFiles, setDirectory) {
     try {
         var directory = await window.showDirectoryPicker();
 
-        buttonEvent.target.style.display = "none";
         console.log(directory.values());
         var tempArray = [];
         for await (const entry of directory.values()) {
             if (entry.kind == "file" && entry.name.endsWith(".pdf")) {
-                tempArray.push(entry.name);
+                const file = await entry
+                    .getFile()
+                    .then((file) => file.arrayBuffer());
+                tempArray.push({
+                    name: entry.name,
+                    file: file,
+                });
             }
         }
         setDirectory(directory);
@@ -46,34 +50,6 @@ function useDebounce(value, delay) {
     }, [value, delay]);
 
     return debouncedValue;
-}
-
-async function getCloudFiles(buttonEvent, files, setFiles) {
-    buttonEvent.target.style.display = "none";
-    var client_name = "-";
-    var clean_name = client_name.replace(/[^a-zA-Z0-9]/g, "");
-
-    while (client_name != clean_name) {
-        client_name = prompt("Enter Client Name (a-z) Only) ");
-        if (client_name == null) {
-            return;
-        }
-        clean_name = client_name.replace(/[^a-zA-Z0-9]/g, "");
-    }
-
-    const response = await fetch(
-        `/api/getCloudFiles?client_name=${clean_name}`,
-        {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-            },
-        }
-    );
-
-    const result = await response.json();
-    console.log(result);
-    setFiles([...files, ...result]);
 }
 
 async function uploadFile(clientName, fileName, directory) {
@@ -100,6 +76,7 @@ async function uploadFile(clientName, fileName, directory) {
 }
 
 function DisplayFiles({ files, setSelectedFile, directory, setPage }) {
+    console.log(files);
     if (files.length) {
         return (
             <>
@@ -108,34 +85,42 @@ function DisplayFiles({ files, setSelectedFile, directory, setPage }) {
                         <div
                             key={index}
                             onClick={(e) => {
-                                directory
-                                    .getFileHandle(file)
-                                    .then((pdfFile) => {
-                                        pdfFile.getFile().then((pdfStream) => {
-                                            setSelectedFile(
-                                                window.URL.createObjectURL(
-                                                    pdfStream
-                                                )
-                                            );
-                                        });
-                                    });
+                                setSelectedFile(file.file);
                             }}
                         >
-                            {file.slice(0, -4)}
+                            {file.name.slice(0, -4)}
                         </div>
                     );
                 })}
+                <div
+                    key="test"
+                    onClick={(e) => {
+                        setSelectedFile(
+                            "https://rdwzxcyl6ptcoxme.public.blob.vercel-storage.com/tysonm/Million%20Dreams-u7FTBNu0GIY5ffWbYjNLMCBrFdpYow.pdf"
+                        );
+                    }}
+                >
+                    {"Million Dreams"}
+                </div>
             </>
         );
     }
 }
 
-function UploadCloudFiles({ files, directory, open, setOpen }) {
+function UploadCloudFiles({
+    files,
+    setFiles,
+    directory,
+    open,
+    setOpen,
+    setDirectory,
+}) {
     const [errorMessage, setErrorMessage] = useState("");
 
     const [username, setUsername] = useState("");
     const debouncedUsername = useDebounce(username, 500);
     const [blobs, setBlobs] = useState([]);
+    const [keepFiles, setKeepFiles] = useState({});
 
     useEffect(() => {
         if (debouncedUsername !== "") {
@@ -149,6 +134,35 @@ function UploadCloudFiles({ files, directory, open, setOpen }) {
         }
     }, [debouncedUsername]);
 
+    // three tabs for switching modes
+    const tabs = (
+        <>
+            <div className={styles.tabCont}>
+                <button
+                    className={styles.tab}
+                    onClick={(e) => setOpen(1)}
+                    style={{ background: open == 1 ? "var(--primary)" : "" }}
+                >
+                    Open Cloud Folder
+                </button>
+                <button
+                    className={styles.tab}
+                    onClick={(e) => setOpen(2)}
+                    style={{ background: open == 2 ? "var(--primary)" : "" }}
+                >
+                    Upload Cloud Files
+                </button>
+                <button
+                    className={styles.tab}
+                    onClick={(e) => setOpen(3)}
+                    style={{ background: open == 3 ? "var(--primary)" : "" }}
+                >
+                    Open Local Folder
+                </button>
+            </div>
+        </>
+    );
+
     if (open == 1) {
         return (
             <>
@@ -160,6 +174,7 @@ function UploadCloudFiles({ files, directory, open, setOpen }) {
                     <h2 className={styles.modalHeader}>
                         Opens Files from Cloud <i>cloud</i>
                     </h2>
+                    {tabs}
                     <div className={styles.formItem}>
                         <label htmlFor="username">Username</label>
                         <input
@@ -175,14 +190,39 @@ function UploadCloudFiles({ files, directory, open, setOpen }) {
                             style={{ width: "100%", padding: 5 }}
                         />
                     </div>
+                    <div className={styles.formItem}>{errorMessage}</div>
                     <div className={styles.modalBody}>
-                        <ul style={{ margin: 20 }}>
-                            {blobs.map((blob) => (
-                                <li key={blob.uploadedAt}>
+                        {blobs.map((blob, index) => (
+                            <div key={index} className={styles.formItem}>
+                                <label className={styles.checkbox}>
+                                    <input
+                                        type="checkbox"
+                                        value={index}
+                                        onChange={(e) => {
+                                            if (e.target.checked) {
+                                                setKeepFiles({
+                                                    ...keepFiles,
+                                                    [index]: {
+                                                        name: blob.pathname
+                                                            .split("/")
+                                                            .pop(),
+                                                        file: blob.url,
+                                                    },
+                                                });
+                                            } else {
+                                                const {
+                                                    [index]: omit,
+                                                    ...rest
+                                                } = keepFiles;
+                                                setKeepFiles(rest);
+                                            }
+                                        }}
+                                    />
+                                    <span></span>
                                     <Link href={blob.url}>{blob.pathname}</Link>
-                                </li>
-                            ))}
-                        </ul>
+                                </label>
+                            </div>
+                        ))}
                     </div>
                     <div className={styles.formItem}>
                         <button
@@ -191,33 +231,16 @@ function UploadCloudFiles({ files, directory, open, setOpen }) {
                             onClick={async (e) => {
                                 e.preventDefault();
 
-                                if (clientName.length == 0) {
+                                if (username.length == 0) {
                                     setErrorMessage("Client Name is Empty");
                                     return;
                                 }
 
-                                var numUploaded = 0;
-                                var checkboxes =
-                                    document.getElementsByName("cloudFiles");
-
-                                for (var i = 0; i < checkboxes.length; i++) {
-                                    if (checkboxes[i].checked) {
-                                        console.log(
-                                            `Uploading ${i}: ${directory}${checkboxes[i].value}.pdf as ${clientName}`
-                                        );
-                                        uploadFile(
-                                            clientName,
-                                            checkboxes[i].value + ".pdf",
-                                            directory
-                                        );
-                                        numUploaded += 1;
-                                    }
-                                }
-                                if (numUploaded == 0) {
-                                    setErrorMessage("No Files Selected");
-                                } else {
-                                    setOpen(false);
-                                }
+                                setFiles([
+                                    ...files,
+                                    ...Object.values(keepFiles),
+                                ]);
+                                setOpen(0);
                             }}
                         >
                             Add to Viewer <i>file_save</i>
@@ -238,45 +261,55 @@ function UploadCloudFiles({ files, directory, open, setOpen }) {
                     <h2 className={styles.modalHeader}>
                         Upload Files to Cloud <i>cloud</i>
                     </h2>
+                    {tabs}
                     <div className={styles.formItem}>
-                        <label htmlFor="clientName">Client Name:</label>
+                        <label htmlFor="username">Username</label>
                         <input
+                            name="username"
+                            value={username}
+                            onChange={(event) =>
+                                setUsername(
+                                    event.target.value.replace(/[^a-z]/g, "")
+                                )
+                            }
                             type="text"
-                            name="clientName"
-                            value={clientName}
-                            onChange={(e) => {
-                                var clean_name = e.target.value.replace(
-                                    /[^a-zA-Z0-9]/g,
-                                    ""
-                                );
-                                if (clean_name != e.target.value) {
-                                    setErrorMessage(
-                                        "Client Name must be alphanumeric"
-                                    );
-                                } else {
-                                    setErrorMessage("");
-                                }
-                                setClientName(clean_name);
-                            }}
+                            required
+                            style={{ width: "100%", padding: 5 }}
                         />
                     </div>
-                    <p className={styles.errorMessage}>{errorMessage}</p>
+                    <div className={styles.formItem}>{errorMessage}</div>
                     <div className={styles.modalBody}>
-                        {files.map((file, index) => {
-                            return (
-                                <div className={styles.formItem} key={index}>
+                        {blobs.map((blob, index) => (
+                            <div key={index} className={styles.formItem}>
+                                <label className={styles.checkbox}>
                                     <input
                                         type="checkbox"
-                                        id={file.slice(0, -4)}
-                                        name="cloudFiles"
-                                        value={file.slice(0, -4)}
+                                        value={index}
+                                        onChange={(e) => {
+                                            if (e.target.checked) {
+                                                setKeepFiles({
+                                                    ...keepFiles,
+                                                    [index]: {
+                                                        name: blob.pathname
+                                                            .split("/")
+                                                            .pop(),
+                                                        file: blob.url,
+                                                    },
+                                                });
+                                            } else {
+                                                const {
+                                                    [index]: omit,
+                                                    ...rest
+                                                } = keepFiles;
+                                                setKeepFiles(rest);
+                                            }
+                                        }}
                                     />
-                                    <label htmlFor={file.slice(0, -4)}>
-                                        {file.slice(0, -4)}
-                                    </label>
-                                </div>
-                            );
-                        })}
+                                    <span></span>
+                                    <Link href={blob.url}>{blob.pathname}</Link>
+                                </label>
+                            </div>
+                        ))}
                     </div>
                     <div className={styles.formItem}>
                         <button
@@ -285,41 +318,27 @@ function UploadCloudFiles({ files, directory, open, setOpen }) {
                             onClick={async (e) => {
                                 e.preventDefault();
 
-                                if (clientName.length == 0) {
+                                if (username.length == 0) {
                                     setErrorMessage("Client Name is Empty");
                                     return;
                                 }
 
-                                var numUploaded = 0;
-                                var checkboxes =
-                                    document.getElementsByName("cloudFiles");
-
-                                for (var i = 0; i < checkboxes.length; i++) {
-                                    if (checkboxes[i].checked) {
-                                        console.log(
-                                            `Uploading ${i}: ${directory}${checkboxes[i].value}.pdf as ${clientName}`
-                                        );
-                                        uploadFile(
-                                            clientName,
-                                            checkboxes[i].value + ".pdf",
-                                            directory
-                                        );
-                                        numUploaded += 1;
-                                    }
-                                }
-                                if (numUploaded == 0) {
-                                    setErrorMessage("No Files Selected");
-                                } else {
-                                    setOpen(false);
-                                }
+                                setFiles([
+                                    ...files,
+                                    ...Object.values(keepFiles),
+                                ]);
+                                setOpen(0);
                             }}
                         >
-                            Upload <i>upload</i>
+                            Upload to Cloud <i>upload</i>
                         </button>
                     </div>
                 </div>
             </>
         );
+    }
+    if (open == 3) {
+        openFolder(files, setFiles, setDirectory);
     }
     return <></>;
 }
@@ -442,7 +461,15 @@ export default function ReaderRolling() {
                     >
                         Files
                     </h2>
-                    {!files.length && (
+                    <button
+                        className="button"
+                        onClick={(e) => {
+                            setCloudForm(1);
+                        }}
+                    >
+                        Open
+                    </button>
+                    {/* {!files.length && (
                         <>
                             <button
                                 id="addToFolder"
@@ -470,7 +497,7 @@ export default function ReaderRolling() {
                                 </button>
                             )}
                         </>
-                    )}
+                    )} */}
                     {files.length != 0 && (
                         <>
                             <button
@@ -574,9 +601,11 @@ export default function ReaderRolling() {
                 </div>
                 <UploadCloudFiles
                     files={files}
+                    setFiles={setFiles}
                     directory={directory}
                     open={cloudForm}
                     setOpen={setCloudForm}
+                    setDirectory={setDirectory}
                 />
             </div>
         </>

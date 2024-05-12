@@ -216,6 +216,88 @@
     padding: 10px;
 }
 
+.modal .checkbox {
+    display: flex;
+    position: relative;
+    padding-left: 35px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.modal .checkbox input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.modal span {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 20px;
+    width: 20px;
+    background-color: #eee;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
+
+.modal .checkbox input ~ span {
+    border: 1px solid #11111155;
+}
+
+.modal .checkbox:hover input ~ span {
+    background-color: #ccc;
+}
+
+.modal .checkbox input:checked ~ span {
+    background-color: var(--button-color);
+    border: 1px solid transparent;
+}
+
+.modal span:after {
+    content: "";
+    position: absolute;
+}
+
+.modal .checkbox input:checked ~ span:after {
+    display: block;
+}
+
+.modal .checkbox span:after {
+    left: 6px;
+    top: 2px;
+    width: 4px;
+    height: 9px;
+    border: solid white;
+    border-width: 0 3px 3px 0;
+    -webkit-transform: rotate(45deg);
+    -ms-transform: rotate(45deg);
+    transform: rotate(45deg);
+}
+
+.modal .tabCont {
+    display: flex;
+    margin: 10px 0;
+    border-radius: 5px;
+    border: 1px solid #555;
+    gap: 2px;
+    background-color: #555;
+    overflow: hidden;
+}
+
+.modal .tabCont button {
+    flex: 1;
+    padding: 5px;
+    border: 0;
+    background-color: #fff;
+}
+
 .errorMessage {
     color: red;
 }

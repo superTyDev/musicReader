@@ -6,6 +6,7 @@
     --light-color: #92ff77;
     --success-color: #65ce65;
     --error-color: #df3832;
+    --button-color: #f19693;
 }
 
 * {
@@ -45,10 +46,11 @@ i,
     width: 100%;
     padding: 10px;
     border: none;
-    background-color: #f19693;
+    background-color: var(--button-color);
+    opacity: 0.9;
     box-shadow: 2px 2px 2px #00000055;
 }
 
 .button:hover {
-    background-color: #da6c68;
+    opacity: 1;
 }
