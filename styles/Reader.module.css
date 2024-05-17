@@ -2,143 +2,142 @@
     width: 100vw;
     height: 100vh;
     position: fixed;
+    display: flex;
+    flex-direction: column;
 }
+
+/* * * * * * * * * * * * * * * * * * *
+ * HEADER 
+ */
 
 .header {
-    width: 100vw;
-    height: 50px;
     line-height: 50px;
+    padding: 0 10px;
+    background-color: var(--primary);
+    color: var(--text);
+    box-shadow: 0px 0px 6px 1px #00000080;
+
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+    align-items: center;
+
+    z-index: 2;
+}
+.header h1 {
+    white-space: nowrap;
     padding: 0 20px;
-    background-color: #000000bb;
-    color: white;
+}
+.header button {
+    flex: 1;
+    font-size: inherit;
+}
+.header input {
+    width: 60px;
+    font-size: 16px;
+    font-family: Roboto, sans-serif;
+    padding: 5px 8px;
+    padding-right: 0;
+    height: 36px;
 }
 
-.header a {
-    text-decoration: none;
-    color: inherit;
+/* * * * * * * * * * * * * * * * * * *
+ * MAIN CONTAINER
+ */
+
+.mainCont {
+    /* width: calc(100vw - max(min(200px, 10vw), 80px)); */
+    /* height: calc(100vh - 50px); */
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    background-color: var(--background);
 }
+.pdfCont {
+    flex: 1;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background-color: var(--background);
+}
+.pdfPage canvas {
+    height: 100% !important;
+    object-fit: contain;
+    margin: auto;
+}
+.pdfCont:fullscreen {
+    position: fixed;
+    width: 100vw !important;
+    height: calc(100vh - 50px) !important;
+    top: 50px;
+}
+.pdfCont .fullscreen {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 2;
+    display: none;
+}
+.pdfCont:fullscreen .fullscreen {
+    display: block;
+}
+
+/* * * * * * * * * * * * * * * * * * *
+ * SIDE NAVIGATION
+ */
 
 .sideNav {
-    width: max(min(200px, 10vw), 80px);
-    height: calc(100vh - 50px);
-    position: fixed;
-    left: 0;
-    bottom: 0;
-
-    background-color: #00000088;
-    color: white;
+    border-right: 6px double var(--accent-color);
+    background-color: var(--primary);
+    color: var(--text);
 
     display: flex;
     flex-direction: column;
     overflow: hidden;
-}
 
+    padding: 3px;
+    resize: horizontal;
+}
+.sideNav.open {
+    width: 0;
+    opacity: 0;
+    padding: 0;
+}
 .sideNav button {
     margin-bottom: 5px;
 }
-
 .folderList {
     overflow-x: auto;
     display: flex;
     flex: 1;
     flex-direction: column;
 }
-
-.folderList div {
+.folderList > div {
     white-space: nowrap;
-    min-width: 100%;
-    width: fit-content;
-    padding: 5px 2px;
+    /* width: 100%; */
+}
+.folderList .file {
+    padding: 5px;
+    cursor: pointer;
 }
 
-.fullscreen {
-    position: fixed;
-    transition: all 0.5s;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background-color: #00000022;
-    color: white;
+/* * * * * * * * * * * * * * * * * * *
+ * INFORMATION BAR
+ */
 
-    text-align: center;
-    line-height: 40px;
-
-    bottom: 20px;
-    left: 20px;
-}
-
-.fullscreen:hover,
-.folderList div:hover {
-    background-color: #00000055;
-}
-
-.mainCont {
-    background-color: aliceblue;
-    width: calc(100vw - max(min(200px, 10vw), 80px));
-    height: calc(100vh - 50px);
-    position: fixed;
-    right: 0;
-    bottom: 0;
-}
-
-.pdfCont {
-    margin-top: 50px;
-    scroll-margin-top: 50px;
-    height: calc(100vh - 100px);
-    overflow-y: auto;
-    overflow-x: hidden;
-}
-
-.pdfPage canvas {
-    width: calc(100vw - max(min(200px, 10vw), 80px)) !important;
-    height: 100% !important;
-    max-height: calc(100vh - 100px);
-    object-fit: contain;
-}
-
-.pagerCont {
-    width: calc(100vw - max(min(200px, 10vw), 80px));
-    height: 50px;
-    position: fixed;
-    right: 0;
-    top: 50px;
-    background-color: #000000bb;
-    color: white;
+.infoBar {
+    background-color: var(--primary);
+    color: var(--text);
+    box-shadow: 0 0 6px 1px #00000080;
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 0 10px;
-    display: flex;
     gap: 10px;
+    padding: 2px 10px;
+    z-index: 1;
 }
-
-.mainCont:fullscreen .pdfCont {
-    width: 100vw !important;
-    height: calc(100vh - 50px) !important;
-    top: 50px;
-}
-
-.mainCont:fullscreen .pagerCont {
-    width: 100vw;
-    height: 50px;
-    right: 0;
-    top: 0;
-}
-
-.pagerCont > * {
-    padding: 10px;
-}
-
-.pagerCont button {
-    flex: 1;
-}
-
-.pagerCont input {
-    width: 60px;
-    font-size: 16px;
-    font-family: Roboto, sans-serif;
-    padding: 5px 8px;
-    padding-right: 0;
+.infoBar .verticalSpacer {
+    border-right: 1px solid var(--text);
+    height: 100%;
 }
 
 .videoBox {
@@ -147,22 +146,24 @@
     z-index: 1;
     position: fixed;
     right: 20px;
-    bottom: 20px;
+    bottom: 70px;
     object-fit: contain;
     transition: 0.5s all;
+    opacity: 0.5;
 }
-
 .videoBox:hover {
-    filter: brightness(0.5) hue-rotate(315deg);
+    opacity: 1;
 }
 
 .isVisible {
     display: flex;
-    gap: 5px;
+    gap: 10px;
     align-items: center;
-    justify-content: center;
-    margin-bottom: 10px;
 }
+
+/* * * * * * * * * * * * * * * * * * *
+ * MODAL POPUP
+ */
 
 .modal {
     position: fixed;
@@ -170,50 +171,39 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background-color: #fff;
+    background-color: var(--background);
     box-shadow: 5px 5px 10px 0 rgba(0, 0, 0, 0.5);
-    min-height: 300px;
-    min-width: 300px;
+    width: min(500px, 90vw);
     border-radius: 5px;
-    padding: 10px;
+    overflow: hidden;
 }
-
 .modalBackground {
     inset: 0;
     position: fixed;
     background-color: #000000aa;
     z-index: 3;
 }
-
 .modal .modalHeader {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 10px;
+    background-color: var(--accent-color);
+    color: var(--accent-text);
 }
-
+.modal .modalBody {
+    padding: 10px;
+    color: var(--text);
+}
 .modal .formItem {
     display: flex;
     margin: 6px 0;
     gap: 5px;
     align-items: baseline;
 }
-.modal input[type="text"],
-.sideNav input[type="text"],
-.submitButton {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    padding: 8px;
-    width: 100%;
-    flex: 1;
-    border: 1px solid #555;
-    border-radius: 5px;
-}
-
-.modal .modalBody {
-    padding: 10px;
+.modal .longList {
+    overflow-y: auto;
+    max-height: 200px;
 }
 
 .modal .checkbox {
@@ -227,7 +217,6 @@
     -ms-user-select: none;
     user-select: none;
 }
-
 .modal .checkbox input {
     position: absolute;
     opacity: 0;
@@ -235,7 +224,6 @@
     height: 0;
     width: 0;
 }
-
 .modal span {
     position: absolute;
     top: 0;
@@ -246,35 +234,29 @@
     border-radius: 5px;
     box-sizing: border-box;
 }
-
 .modal .checkbox input ~ span {
     border: 1px solid #11111155;
 }
-
 .modal .checkbox:hover input ~ span {
     background-color: #ccc;
 }
-
 .modal .checkbox input:checked ~ span {
-    background-color: var(--button-color);
+    background-color: var(--accent-color);
     border: 1px solid transparent;
 }
-
 .modal span:after {
     content: "";
     position: absolute;
 }
-
 .modal .checkbox input:checked ~ span:after {
     display: block;
 }
-
 .modal .checkbox span:after {
     left: 6px;
     top: 2px;
     width: 4px;
     height: 9px;
-    border: solid white;
+    border: solid var(--background);
     border-width: 0 3px 3px 0;
     -webkit-transform: rotate(45deg);
     -ms-transform: rotate(45deg);
@@ -290,44 +272,41 @@
     background-color: #555;
     overflow: hidden;
 }
-
 .modal .tabCont button {
     flex: 1;
     padding: 5px;
     border: 0;
     background-color: #fff;
 }
+.modal .tabCont button:hover {
+    background-color: #ddd;
+}
 
 .errorMessage {
     color: red;
 }
 
+.modal input[type="text"],
+.sideNav input[type="text"],
+.submitButton {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 8px;
+    width: 100%;
+    flex: 1;
+    border: 1px solid #555;
+    border-radius: 5px;
+}
+
 /* width is less than 500px */
 @media screen and (max-width: 500px) {
-    .sideNav {
-        background-color: #000000dd;
-        z-index: 1;
-    }
     .mainCont {
         width: 100vw;
     }
 
-    .pagerCont {
-        width: 100vw;
-    }
-
-    .pagerCont input {
-        width: 50px;
-    }
     .pdfPage canvas {
         width: 100% !important;
-    }
-    .fullscreen {
-        left: 100px;
-        background-color: #00000044;
-    }
-    .mainCont:fullscreen .fullscreen {
-        left: 20px;
-        background-color: #00000022;
     }
 }

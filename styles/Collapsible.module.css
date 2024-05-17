@@ -1,0 +1,35 @@
+.collapsible {
+    margin-bottom: 5px;
+    border-bottom: 5px solid #1f1f1f2d;
+}
+
+.collapsibleHeader {
+    background-color: #1f1f1f2d;
+    cursor: pointer;
+    padding: 5px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.collapsibleHeader span {
+    flex: 1 1 0px;
+    min-width: 0;
+}
+
+.collapsibleHeader i {
+    background-color: var(--primary);
+}
+
+.collapsibleContent {
+    overflow: hidden;
+    transition: all 0.3s ease-out;
+    max-height: 0;
+    padding: 0;
+}
+
+.collapsible.open .collapsibleContent {
+    padding: 5px 0;
+    max-height: 1000px;
+}

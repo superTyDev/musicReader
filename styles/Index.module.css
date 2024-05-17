@@ -5,9 +5,10 @@
 .center {
     width: max(80%, 800px);
     margin: auto;
-    background-color: #ffffff55;
+    background-color: #00000011;
     padding: 10px 20px;
     border-radius: 10px;
+    color: var(--text);
 }
 
 .linkCont {
@@ -22,6 +23,6 @@
     flex: 1 0 300px;
     padding: 10px;
     text-decoration: none;
-    color: inherit;
+    color: var(--button-text);
     text-align: center;
 }

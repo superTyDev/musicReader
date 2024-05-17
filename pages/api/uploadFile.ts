@@ -12,15 +12,13 @@ export default async function handler(
         const jsonResponse = await handleUpload({
             body,
             request,
-            onBeforeGenerateToken: async (
-                pathname="testFolder/myFile.jpg",
-            ) => {
+            onBeforeGenerateToken: async () => {
                 return {
                     allowedContentTypes: [
                         "image/jpeg",
                         "image/png",
                         "image/gif",
-                        "application/pdf"
+                        "application/pdf",
                     ],
                     tokenPayload: JSON.stringify({}),
                 };

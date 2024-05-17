@@ -1,12 +1,12 @@
 @import url("https://fonts.googleapis.com/css?family=Roboto&display=swap");
 
 :root {
-    --dark-color-a: #000000;
-    --dark-color-b: #272728;
-    --light-color: #92ff77;
-    --success-color: #65ce65;
-    --error-color: #df3832;
-    --button-color: #f19693;
+    --primary: #d9d9d9d9;
+    --primary-text: #ffffff;
+    --accent-color: #003b68;
+    --accent-text: #ffffff;
+    --background: #f0f0f0;
+    --text: #000000;
 }
 
 * {
@@ -18,7 +18,8 @@
 body {
     font-family: "Roboto", sans-serif;
     font-size: 16px;
-    background: var(--light-color);
+    background: var(--background);
+    color: var(--primary-text);
     margin: 0px;
     height: 100vh;
 }
@@ -46,11 +47,23 @@ i,
     width: 100%;
     padding: 10px;
     border: none;
-    background-color: var(--button-color);
-    opacity: 0.9;
-    box-shadow: 2px 2px 2px #00000055;
+    color: var(--accent-text);
+    background-color: var(--accent-color);
+    box-shadow: 1px 1px 3px #00000055;
 }
 
 .button:hover {
-    opacity: 1;
+    filter: brightness(1.15);
+}
+
+.calmButton {
+    padding: 10px;
+    border-radius: 6px;
+    background-color: var(--primary);
+    filter: brightness(1);
+    cursor: pointer;
+}
+
+.calmButton:hover {
+    filter: brightness(0.9);
 }

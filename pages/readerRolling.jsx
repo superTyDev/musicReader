@@ -1,9 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import React, { useState, useRef } from "react";
+import { upload } from "@vercel/blob/client";
 
 import styles from "../styles/Reader.module.css";
+import Collapsible from "../components/collapsible";
 import { useEffect } from "react";
 import { pdfjs, Document, Page } from "react-pdf";
 
@@ -16,7 +19,6 @@ async function openFolder(files, setFiles, setDirectory) {
     try {
         var directory = await window.showDirectoryPicker();
 
-        console.log(directory.values());
         var tempArray = [];
         for await (const entry of directory.values()) {
             if (entry.kind == "file" && entry.name.endsWith(".pdf")) {
@@ -26,6 +28,7 @@ async function openFolder(files, setFiles, setDirectory) {
                 tempArray.push({
                     name: entry.name,
                     file: file,
+                    parent: directory.name,
                 });
             }
         }
@@ -52,62 +55,42 @@ function useDebounce(value, delay) {
     return debouncedValue;
 }
 
-async function uploadFile(clientName, fileName, directory) {
-    directory.getFileHandle(fileName).then((pdfFile) => {
-        pdfFile.getFile().then(async (pdfStream) => {
-            const pdfBuffer = await pdfStream.arrayBuffer();
-            // const pdfBytes = new Uint8Array(pdfBuffer);
-
-            const formData = new FormData();
-            formData.append("clientName", clientName);
-            formData.append("fileName", fileName);
-            formData.append("fileData", pdfBuffer);
-
-            const response = await fetch("/api/uploadFile", {
-                method: "POST",
-                body: formData,
-                type: "multipart/form-data",
-            });
-
-            const result = await response.json();
-            console.log("File uploaded with ID:", result.id);
-        });
-    });
-}
-
 function DisplayFiles({ files, setSelectedFile, directory, setPage }) {
-    console.log(files);
-    if (files.length) {
-        return (
-            <>
-                {files.map((file, index) => {
-                    return (
-                        <div
-                            key={index}
-                            onClick={(e) => {
-                                setSelectedFile(file.file);
-                            }}
-                        >
-                            {file.name.slice(0, -4)}
-                        </div>
-                    );
-                })}
+    // split files into subarray by parent directory
+    if (!files.length) {
+        return;
+    }
+
+    const tempFiles = files.reduce((acc, file) => {
+        if (acc[file.parent]) {
+            acc[file.parent].push(file);
+        } else {
+            acc[file.parent] = [file];
+        }
+        return acc;
+    }, {});
+
+    console.log(tempFiles);
+
+    return Object.keys(tempFiles).map((key, index) => (
+        <Collapsible title={key} key={index}>
+            {tempFiles[key].map((file, index) => (
                 <div
-                    key="test"
+                    key={index}
+                    className={styles.file}
                     onClick={(e) => {
-                        setSelectedFile(
-                            "https://rdwzxcyl6ptcoxme.public.blob.vercel-storage.com/tysonm/Million%20Dreams-u7FTBNu0GIY5ffWbYjNLMCBrFdpYow.pdf"
-                        );
+                        setSelectedFile(file);
+                        setPage(1);
                     }}
                 >
-                    {"Million Dreams"}
+                    {file.name.slice(0, -4)}
                 </div>
-            </>
-        );
-    }
+            ))}
+        </Collapsible>
+    ));
 }
 
-function UploadCloudFiles({
+function FilePopup({
     files,
     setFiles,
     directory,
@@ -123,7 +106,7 @@ function UploadCloudFiles({
     const [keepFiles, setKeepFiles] = useState({});
 
     useEffect(() => {
-        if (debouncedUsername !== "") {
+        if (debouncedUsername !== "" && open == 1) {
             const usernameClean = debouncedUsername.replace(/[^a-z]/g, "");
             fetch(`/api/listFiles?username=${usernameClean}`)
                 .then((response) => response.json())
@@ -134,6 +117,10 @@ function UploadCloudFiles({
         }
     }, [debouncedUsername]);
 
+    useEffect(() => {
+        setErrorMessage("");
+    }, [open]);
+
     // three tabs for switching modes
     const tabs = (
         <>
@@ -143,7 +130,7 @@ function UploadCloudFiles({
                     onClick={(e) => setOpen(1)}
                     style={{ background: open == 1 ? "var(--primary)" : "" }}
                 >
-                    Open Cloud Folder
+                    Open Cloud Files
                 </button>
                 <button
                     className={styles.tab}
@@ -163,6 +150,7 @@ function UploadCloudFiles({
         </>
     );
 
+    // Get Cloud Files
     if (open == 1) {
         return (
             <>
@@ -174,82 +162,94 @@ function UploadCloudFiles({
                     <h2 className={styles.modalHeader}>
                         Opens Files from Cloud <i>cloud</i>
                     </h2>
-                    {tabs}
-                    <div className={styles.formItem}>
-                        <label htmlFor="username">Username</label>
-                        <input
-                            name="username"
-                            value={username}
-                            onChange={(event) =>
-                                setUsername(
-                                    event.target.value.replace(/[^a-z]/g, "")
-                                )
-                            }
-                            type="text"
-                            required
-                            style={{ width: "100%", padding: 5 }}
-                        />
-                    </div>
-                    <div className={styles.formItem}>{errorMessage}</div>
                     <div className={styles.modalBody}>
-                        {blobs.map((blob, index) => (
-                            <div key={index} className={styles.formItem}>
-                                <label className={styles.checkbox}>
-                                    <input
-                                        type="checkbox"
-                                        value={index}
-                                        onChange={(e) => {
-                                            if (e.target.checked) {
-                                                setKeepFiles({
-                                                    ...keepFiles,
-                                                    [index]: {
-                                                        name: blob.pathname
-                                                            .split("/")
-                                                            .pop(),
-                                                        file: blob.url,
-                                                    },
-                                                });
-                                            } else {
-                                                const {
-                                                    [index]: omit,
-                                                    ...rest
-                                                } = keepFiles;
-                                                setKeepFiles(rest);
-                                            }
-                                        }}
-                                    />
-                                    <span></span>
-                                    <Link href={blob.url}>{blob.pathname}</Link>
-                                </label>
-                            </div>
-                        ))}
-                    </div>
-                    <div className={styles.formItem}>
-                        <button
-                            type="submit"
-                            className={styles.submitButton}
-                            onClick={async (e) => {
-                                e.preventDefault();
-
-                                if (username.length == 0) {
-                                    setErrorMessage("Client Name is Empty");
-                                    return;
+                        {tabs}
+                        <div className={styles.formItem}>
+                            <label htmlFor="username">Username</label>
+                            <input
+                                name="username"
+                                value={username}
+                                onChange={(event) =>
+                                    setUsername(
+                                        event.target.value.replace(
+                                            /[^a-z]/g,
+                                            ""
+                                        )
+                                    )
                                 }
+                                type="text"
+                                required
+                                style={{ width: "100%", padding: 5 }}
+                            />
+                        </div>
+                        <div className={styles.formItem}>{errorMessage}</div>
+                        <div className={styles.longList}>
+                            {blobs.map((blob, index) => (
+                                <div key={index} className={styles.formItem}>
+                                    <label className={styles.checkbox}>
+                                        <input
+                                            type="checkbox"
+                                            value={index}
+                                            onChange={(e) => {
+                                                if (e.target.checked) {
+                                                    setKeepFiles({
+                                                        ...keepFiles,
+                                                        [index]: {
+                                                            name: blob.pathname
+                                                                .split("/")
+                                                                .pop(),
+                                                            file: blob.url,
+                                                            parent: blob.pathname.split(
+                                                                "/"
+                                                            )[0],
+                                                        },
+                                                    });
+                                                } else {
+                                                    const {
+                                                        [index]: omit,
+                                                        ...rest
+                                                    } = keepFiles;
+                                                    setKeepFiles(rest);
+                                                }
+                                            }}
+                                        />
+                                        <span></span>
+                                        <Link href={blob.url}>
+                                            {blob.pathname}
+                                        </Link>
+                                    </label>
+                                </div>
+                            ))}
+                        </div>
+                        <div className={styles.formItem}>
+                            <button
+                                type="submit"
+                                className={styles.submitButton}
+                                onClick={async (e) => {
+                                    e.preventDefault();
 
-                                setFiles([
-                                    ...files,
-                                    ...Object.values(keepFiles),
-                                ]);
-                                setOpen(0);
-                            }}
-                        >
-                            Add to Viewer <i>file_save</i>
-                        </button>
+                                    if (username.length == 0) {
+                                        setErrorMessage("Client Name is Empty");
+                                        return;
+                                    }
+
+                                    setFiles([
+                                        ...files,
+                                        ...Object.values(keepFiles),
+                                    ]);
+                                    setOpen(0);
+                                }}
+                            >
+                                Add to Viewer <i>file_save</i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </>
         );
     }
+
+    // Upload Cloud Files
     if (open == 2) {
         return (
             <>
@@ -261,84 +261,106 @@ function UploadCloudFiles({
                     <h2 className={styles.modalHeader}>
                         Upload Files to Cloud <i>cloud</i>
                     </h2>
-                    {tabs}
-                    <div className={styles.formItem}>
-                        <label htmlFor="username">Username</label>
-                        <input
-                            name="username"
-                            value={username}
-                            onChange={(event) =>
-                                setUsername(
-                                    event.target.value.replace(/[^a-z]/g, "")
-                                )
-                            }
-                            type="text"
-                            required
-                            style={{ width: "100%", padding: 5 }}
-                        />
-                    </div>
-                    <div className={styles.formItem}>{errorMessage}</div>
                     <div className={styles.modalBody}>
-                        {blobs.map((blob, index) => (
-                            <div key={index} className={styles.formItem}>
-                                <label className={styles.checkbox}>
-                                    <input
-                                        type="checkbox"
-                                        value={index}
-                                        onChange={(e) => {
-                                            if (e.target.checked) {
-                                                setKeepFiles({
-                                                    ...keepFiles,
-                                                    [index]: {
-                                                        name: blob.pathname
-                                                            .split("/")
-                                                            .pop(),
-                                                        file: blob.url,
-                                                    },
-                                                });
-                                            } else {
-                                                const {
-                                                    [index]: omit,
-                                                    ...rest
-                                                } = keepFiles;
-                                                setKeepFiles(rest);
-                                            }
-                                        }}
-                                    />
-                                    <span></span>
-                                    <Link href={blob.url}>{blob.pathname}</Link>
-                                </label>
-                            </div>
-                        ))}
-                    </div>
-                    <div className={styles.formItem}>
-                        <button
-                            type="submit"
-                            className={styles.submitButton}
-                            onClick={async (e) => {
-                                e.preventDefault();
-
-                                if (username.length == 0) {
-                                    setErrorMessage("Client Name is Empty");
-                                    return;
+                        {tabs}
+                        <div className={styles.formItem}>
+                            <label htmlFor="username">Username</label>
+                            <input
+                                name="username"
+                                value={username}
+                                onChange={(event) =>
+                                    setUsername(
+                                        event.target.value.replace(
+                                            /[^a-z]/g,
+                                            ""
+                                        )
+                                    )
                                 }
+                                type="text"
+                                required
+                                style={{ width: "100%", padding: 5 }}
+                            />
+                        </div>
+                        <div className={styles.formItem}>{errorMessage}</div>
+                        {files.length == 0 && "No files to upload."}
+                        {files.length != 0 && (
+                            <div
+                                id="uploadFileChecks"
+                                className={styles.longList}
+                            >
+                                {files.map((file, index) => (
+                                    <div
+                                        key={index}
+                                        className={styles.formItem}
+                                    >
+                                        <label className={styles.checkbox}>
+                                            <input
+                                                type="checkbox"
+                                                value={index}
+                                            />
+                                            <span></span>
+                                            <div>{file.name}</div>
+                                        </label>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        <div className={styles.formItem}>
+                            <button
+                                type="submit"
+                                className={styles.submitButton}
+                                onClick={async (e) => {
+                                    e.preventDefault();
 
-                                setFiles([
-                                    ...files,
-                                    ...Object.values(keepFiles),
-                                ]);
-                                setOpen(0);
-                            }}
-                        >
-                            Upload to Cloud <i>upload</i>
-                        </button>
+                                    if (username.length == 0) {
+                                        setErrorMessage("Client Name is Empty");
+                                        return;
+                                    }
+
+                                    // upload each file
+                                    // iterate through each checkbox and get value
+                                    for (const checkbox of document.querySelectorAll(
+                                        "#uploadFileChecks input[type=checkbox]:checked"
+                                    )) {
+                                        const index = parseInt(checkbox.value);
+                                        const file = files[index];
+                                        const tempName = file.name.replace(
+                                            /[^a-z0-9.]/gi,
+                                            "_"
+                                        );
+                                        console.log(tempName);
+                                        const newBlob = await upload(
+                                            username + "/" + tempName,
+                                            file.file,
+                                            {
+                                                access: "public",
+                                                handleUploadUrl:
+                                                    "/api/uploadFile",
+                                            }
+                                        );
+                                    }
+
+                                    setErrorMessage(
+                                        `Uploaded ${
+                                            Object.values(keepFiles).length
+                                        } files`
+                                    );
+                                    // setOpen(0);
+                                }}
+                            >
+                                Upload to Cloud <i>upload</i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </>
         );
     }
+
+    // Get Local Files
     if (open == 3) {
         openFolder(files, setFiles, setDirectory);
+        setOpen(0);
     }
     return <></>;
 }
@@ -346,9 +368,10 @@ function UploadCloudFiles({
 export default function ReaderRolling() {
     const [files, setFiles] = useState([]);
     const [directory, setDirectory] = useState(null);
-    const [selectedFile, setSelectedFile] = useState(
-        "./Nocturne Op. 72 Chopin.pdf"
-    );
+    const [selectedFile, setSelectedFile] = useState({
+        file: "./Nocturne Op. 72 Chopin.pdf",
+        name: "Nocturne Op. 72 Chopin",
+    });
     const [modelLoaded, setModelLoaded] = useState(false);
     const canvasRef = useRef(null);
     const requestRef = React.useRef();
@@ -448,90 +471,96 @@ export default function ReaderRolling() {
 
     return (
         <>
-            <div className="page">
-                <div className={styles.header}>
-                    <h1>MC - Reader</h1>
-                </div>
-                <div className={styles.sideNav}>
-                    <h2
-                        style={{
-                            textAlign: "center",
-                            borderBottom: "1px white solid",
-                        }}
-                    >
-                        Files
-                    </h2>
-                    <button
-                        className="button"
+            <div className={styles.page}>
+                <nav className={styles.header}>
+                    <i
+                        className="calmButton"
                         onClick={(e) => {
-                            setCloudForm(1);
+                            document
+                                .querySelector(`.${styles.sideNav}`)
+                                .classList.toggle(styles.open);
                         }}
                     >
-                        Open
+                        menu
+                    </i>
+                    <button
+                        className="button icon"
+                        disabled={page === 1}
+                        onClick={() => alterPage("previous")}
+                    >
+                        arrow_back
                     </button>
-                    {/* {!files.length && (
-                        <>
-                            <button
-                                id="addToFolder"
-                                onClick={(e) => {
-                                    openFolder(
-                                        e,
-                                        files,
-                                        setFiles,
-                                        setDirectory
-                                    );
-                                }}
-                                className="button"
-                            >
-                                Open Folder
-                            </button>
-                            {cloudForm == 0 && (
+                    <div>
+                        <input
+                            value={page}
+                            onChange={(e) => {
+                                alterPage(e.target.value);
+                            }}
+                            type="number"
+                        />
+                        {" / "}
+                        {numPages}
+                    </div>
+                    <button
+                        className="button icon"
+                        disabled={page >= numPages}
+                        onClick={() => alterPage("next")}
+                    >
+                        arrow_forward
+                    </button>
+                    <button
+                        className="button icon"
+                        onClick={() => alterPage("reset")}
+                        style={{ flex: 0 }}
+                    >
+                        restart_alt
+                    </button>
+                </nav>
+                <div className={styles.mainCont}>
+                    <div className={styles.sideNav}>
+                        <h2
+                            style={{
+                                textAlign: "center",
+                                padding: "5px",
+                            }}
+                        >
+                            Files
+                        </h2>
+                        <button
+                            className="button"
+                            onClick={(e) => {
+                                setCloudForm(1);
+                            }}
+                        >
+                            Open
+                        </button>
+                        {files.length != 0 && (
+                            <>
                                 <button
                                     id="addToFolder"
                                     onClick={(e) => {
-                                        setCloudForm(1);
+                                        setCloudForm(2);
                                     }}
                                     className="button"
                                 >
-                                    Open Cloud Files
+                                    Cloud Upload
                                 </button>
-                            )}
-                        </>
-                    )} */}
-                    {files.length != 0 && (
-                        <>
-                            <button
-                                id="addToFolder"
-                                onClick={(e) => {
-                                    setCloudForm(true);
-                                }}
-                                className="button"
-                            >
-                                Upload to Cloud
-                            </button>
-                        </>
-                    )}
+                            </>
+                        )}
+                        <div className="spacer"></div>
 
-                    <div className={styles.folderList}>
-                        <DisplayFiles
-                            files={files}
-                            setSelectedFile={setSelectedFile}
-                            directory={directory}
-                            setPage={setPage}
-                        />
-                        <spacer />
+                        <div className={styles.folderList}>
+                            <DisplayFiles
+                                files={files}
+                                setSelectedFile={setSelectedFile}
+                                directory={directory}
+                                setPage={setPage}
+                            />
+                            <spacer />
+                        </div>
                     </div>
-                    {modelLoaded && (
-                        <>
-                            <p className={styles.isVisible}>
-                                Camera On <i>visibility</i>
-                            </p>
-                        </>
-                    )}
-                </div>
-                <div className={styles.mainCont} id="mainCont">
                     <Document
-                        file={selectedFile}
+                        file={selectedFile.file}
                         onLoadSuccess={onDocumentLoadSuccess}
                         className={styles.pdfCont}
                     >
@@ -542,49 +571,47 @@ export default function ReaderRolling() {
                                 className={styles.pdfPage}
                             />
                         ))}
+                        <i
+                            className={`${styles.fullscreen} calmButton`}
+                            onClick={(e) => {
+                                if (document.fullscreenElement) {
+                                    document.exitFullscreen();
+                                } else {
+                                    document
+                                        .querySelector(`.${styles.pdfCont}`)
+                                        .requestFullscreen();
+                                }
+                            }}
+                        >
+                            fullscreen_exit
+                        </i>
                     </Document>
-                    <nav className={styles.pagerCont}>
-                        <button
-                            className="previous button"
-                            disabled={page === 1}
-                            onClick={() => alterPage("previous")}
-                        >
-                            Previous
-                        </button>
-                        <div>
-                            <input
-                                value={page}
-                                onChange={(e) => {
-                                    alterPage(e.target.value);
-                                }}
-                                type="number"
-                            />
-                            {" / "}
-                            {numPages}
-                        </div>
-                        <button
-                            className="next button"
-                            disabled={page >= numPages}
-                            onClick={() => alterPage("next")}
-                        >
-                            Next
-                        </button>
-                        <button
-                            className="reset button"
-                            onClick={() => alterPage("reset")}
-                            style={{ flex: 0 }}
-                        >
-                            <i style={{ fontSize: "inherit" }}>restart_alt</i>
-                        </button>
-                    </nav>
+                </div>
+                <div className={styles.infoBar}>
+                    <Image
+                        src="/logoShort.png"
+                        alt="Music Reader Logo"
+                        width={36}
+                        height={36}
+                    ></Image>
+                    <div className={styles.verticalSpacer}></div>
+                    <div>File: {selectedFile.name}</div>
+                    <spacer></spacer>
+                    {modelLoaded && (
+                        <>
+                            <p className={styles.isVisible}>
+                                Camera On <i>visibility</i>
+                            </p>
+                        </>
+                    )}
                     <i
-                        className={styles.fullscreen}
+                        className="calmButton"
                         onClick={(e) => {
                             if (document.fullscreenElement) {
                                 document.exitFullscreen();
                             } else {
                                 document
-                                    .getElementById("mainCont")
+                                    .querySelector(`.${styles.pdfCont}`)
                                     .requestFullscreen();
                             }
                         }}
@@ -599,7 +626,7 @@ export default function ReaderRolling() {
                         }}
                     ></video>
                 </div>
-                <UploadCloudFiles
+                <FilePopup
                     files={files}
                     setFiles={setFiles}
                     directory={directory}
