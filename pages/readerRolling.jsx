@@ -107,7 +107,9 @@ function FilePopup({
 
     useEffect(() => {
         if (debouncedUsername !== "" && open == 1) {
-            const usernameClean = debouncedUsername.replace(/[^a-z]/g, "");
+            const usernameClean = debouncedUsername
+                .replace(/[^a-zA-Z]/g, "")
+                .toLowerCase();
             fetch(`/api/listFiles?username=${usernameClean}`)
                 .then((response) => response.json())
                 .then((data) => {

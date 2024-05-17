@@ -23,6 +23,6 @@
     flex: 1 0 300px;
     padding: 10px;
     text-decoration: none;
-    color: var(--button-text);
+    color: var(--accent-text);
     text-align: center;
 }
