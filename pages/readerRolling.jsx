@@ -367,6 +367,49 @@ function FilePopup({
     return <></>;
 }
 
+function SettingsPopup({ open, setOpen }) {
+    return (
+        open && (
+            <>
+                <div
+                    className={styles.modalBackground}
+                    onClick={(e) => setOpen(false)}
+                ></div>
+                <div className={styles.modal}>
+                    <h2 className={styles.modalHeader}>
+                        Settings <i>settings</i>
+                    </h2>
+                    <div className={styles.modalBody}>
+                        <div className={styles.formItem}>
+                            <label htmlFor="scrollBehavior">
+                                Scroll Behavior
+                            </label>
+                            <input name="scrollAmount" type="text" required />
+                            {"% of "}
+                            <select id="scrollBehavior" name="scrollBehavior">
+                                <option value="page">Page</option>
+                                <option value="window">Window</option>
+                                <option value="fiat">Absolute</option>
+                            </select>
+                        </div>
+                        <div className={styles.formItem}>
+                            <button
+                                type="submit"
+                                className={styles.submitButton}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                }}
+                            >
+                                Save Settings <i>save</i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </>
+        )
+    );
+}
+
 export default function ReaderRolling() {
     const [files, setFiles] = useState([]);
     const [directory, setDirectory] = useState(null);
@@ -379,6 +422,7 @@ export default function ReaderRolling() {
     const requestRef = React.useRef();
     const previousTimeRef = React.useRef();
     const [cloudForm, setCloudForm] = useState(0);
+    const [settings, setSettings] = useState(false);
 
     let numPagesRef = React.useRef(4);
     let pageRef = React.useRef(1);
@@ -609,6 +653,14 @@ export default function ReaderRolling() {
                     <i
                         className="calmButton"
                         onClick={(e) => {
+                            setSettings(true);
+                        }}
+                    >
+                        settings
+                    </i>
+                    <i
+                        className="calmButton"
+                        onClick={(e) => {
                             if (document.fullscreenElement) {
                                 document.exitFullscreen();
                             } else {
@@ -636,6 +688,10 @@ export default function ReaderRolling() {
                     setOpen={setCloudForm}
                     setDirectory={setDirectory}
                 />
+                <SettingsPopup
+                    open={settings}
+                    setOpen={setSettings}
+                ></SettingsPopup>
             </div>
         </>
     );
