@@ -195,12 +195,19 @@
 .modal .modalBody {
     padding: 10px;
     color: var(--text);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
 }
 .modal .formItem {
     display: flex;
     margin: 6px 0;
     gap: 5px;
     align-items: baseline;
+    flex-wrap: wrap;
+}
+.modal .formItem label {
+    width: 100%;
 }
 .modal .longList {
     overflow-y: auto;
@@ -289,6 +296,7 @@
 
 .modal input[type="text"],
 .sideNav input[type="text"],
+.modal select,
 .submitButton {
     display: flex;
     align-items: center;

@@ -2,14 +2,13 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { upload } from "@vercel/blob/client";
 
 import styles from "../styles/Reader.module.css";
 import Collapsible from "../components/collapsible";
-import { useEffect } from "react";
-import { pdfjs, Document, Page } from "react-pdf";
 
+import { pdfjs, Document, Page } from "react-pdf";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css";
 
@@ -367,7 +366,10 @@ function FilePopup({
     return <></>;
 }
 
-function SettingsPopup({ open, setOpen }) {
+function SettingsPopup({ open, setOpen, settings }) {
+    const [behaviorValue, setBehaviorValue] = useState("page");
+    const [scrollAmount, setScrollAmount] = useState(100);
+
     return (
         open && (
             <>
@@ -384,24 +386,51 @@ function SettingsPopup({ open, setOpen }) {
                             <label htmlFor="scrollBehavior">
                                 Scroll Behavior
                             </label>
-                            <input name="scrollAmount" type="text" required />
-                            {"% of "}
-                            <select id="scrollBehavior" name="scrollBehavior">
-                                <option value="page">Page</option>
-                                <option value="window">Window</option>
-                                <option value="fiat">Absolute</option>
-                            </select>
-                        </div>
-                        <div className={styles.formItem}>
-                            <button
-                                type="submit"
-                                className={styles.submitButton}
-                                onClick={(e) => {
-                                    e.preventDefault();
+                            <input
+                                name="scrollAmount"
+                                type="text"
+                                value={settings.scrollAmount}
+                                onChange={(e) => {
+                                    settings.setScrollAmount(
+                                        e.target.value.match(/-?\d+\.\d+/)
+                                            ? e.target.value.match(
+                                                  /-?\d+\.\d+/
+                                              )[0]
+                                            : 0
+                                    );
+                                }}
+                                required
+                            />
+                            {settings.behaviorValue == "absolute" && "px. "}
+                            {settings.behaviorValue != "absolute" && "% of "}
+                            <select
+                                id="scrollBehavior"
+                                name="scrollBehavior"
+                                value={settings.behaviorValue}
+                                onChange={(e) => {
+                                    settings.setBehaviorValue(e.target.value);
                                 }}
                             >
-                                Save Settings <i>save</i>
-                            </button>
+                                <option value="page">Page</option>
+                                <option value="window">Window</option>
+                                <option value="absolute">Absolute</option>
+                            </select>
+                        </div>
+
+                        <div className={styles.formItem}>
+                            <label htmlFor="theme">Theme</label>
+                            <select
+                                id="theme"
+                                name="theme"
+                                value={settings.theme}
+                                onChange={(e) => {
+                                    settings.setTheme(e.target.value);
+                                }}
+                            >
+                                <option value="system">System</option>
+                                <option value="light">Light</option>
+                                <option value="dark">Dark</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -410,7 +439,7 @@ function SettingsPopup({ open, setOpen }) {
     );
 }
 
-export default function ReaderRolling() {
+export default function ReaderRolling({ settings }) {
     const [files, setFiles] = useState([]);
     const [directory, setDirectory] = useState(null);
     const [selectedFile, setSelectedFile] = useState({
@@ -418,18 +447,15 @@ export default function ReaderRolling() {
         name: "Nocturne Op. 72 Chopin",
     });
     const [modelLoaded, setModelLoaded] = useState(false);
-    const canvasRef = useRef(null);
     const requestRef = React.useRef();
     const previousTimeRef = React.useRef();
     const [cloudForm, setCloudForm] = useState(0);
-    const [settings, setSettings] = useState(false);
+    const [isSettings, setIsSettings] = useState(false);
 
     let numPagesRef = React.useRef(4);
     let pageRef = React.useRef(1);
     const [numPages, setNumPages] = useState(numPagesRef.current);
     const [page, setPage] = useState(pageRef.current);
-
-    const [username, setUsername] = useState("");
 
     function onDocumentLoadSuccess({ numPages }) {
         pageRef.current = 1;
@@ -440,10 +466,26 @@ export default function ReaderRolling() {
 
     function alterPage(state) {
         let valid = true;
+
         if (state == "next") {
-            pageRef.current += 1;
+            pageRef.current = Math.floor(pageRef.current) + 1;
         } else if (state == "previous") {
-            pageRef.current += -1;
+            pageRef.current = Math.floor(pageRef.current) - 1;
+        } else if (state == "mouthNext") {
+            if (settings.behaviorValue == "page") {
+                pageRef.current = Math.floor(pageRef.current) + 1;
+            } else if (settings.behaviorValue == "window") {
+                pageRef.current =
+                    pageRef.current +
+                    (parseDouble(settings.scrollAmount) / 100) *
+                        document.querySelector(`.${styles.pdfCont}`)
+                            .clientHeight;
+            } else if (settings.behaviorValue == "absolute") {
+                pageRef.current =
+                    pageRef.current + parseInt(settings.scrollAmount);
+            }
+        } else if (state == "mouthPrevious") {
+            pageRef.current = Math.floor(pageRef.current) - 1;
         } else if (state == "reset") {
             pageRef.current = 1;
         } else if (parseInt(state) != NaN) {
@@ -493,12 +535,12 @@ export default function ReaderRolling() {
                     pageRef.current < numPagesRef.current &&
                     mouthPrediction.direction == "right"
                 ) {
-                    alterPage("next");
+                    alterPage("mouthNext");
                 } else if (
                     pageRef.current > 1 &&
                     mouthPrediction.direction == "left"
                 ) {
-                    alterPage("previous");
+                    alterPage("mouthPrevious");
                 }
             }
         }
@@ -653,7 +695,7 @@ export default function ReaderRolling() {
                     <i
                         className="calmButton"
                         onClick={(e) => {
-                            setSettings(true);
+                            setIsSettings(true);
                         }}
                     >
                         settings
@@ -689,8 +731,9 @@ export default function ReaderRolling() {
                     setDirectory={setDirectory}
                 />
                 <SettingsPopup
-                    open={settings}
-                    setOpen={setSettings}
+                    open={isSettings}
+                    setOpen={setIsSettings}
+                    settings={settings}
                 ></SettingsPopup>
             </div>
         </>

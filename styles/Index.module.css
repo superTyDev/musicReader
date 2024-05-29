@@ -1,12 +1,15 @@
 .page {
     padding: 10vw;
+    height: 100vh;
+    background-image: url("/repeating-triangles.svg");
 }
 
 .center {
     width: max(80%, 800px);
     margin: auto;
-    background-color: #00000011;
-    padding: 10px 20px;
+    background-color: rgb(from var(--primary) r g b / 10%);
+    backdrop-filter: blur(3px);
+    padding: 30px 40px;
     border-radius: 10px;
     color: var(--text);
 }
