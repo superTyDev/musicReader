@@ -12,7 +12,7 @@ import { pdfjs, Document, Page } from "react-pdf";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css";
 
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+// pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
 async function openFolder(files, setFiles, setDirectory) {
     try {
@@ -647,7 +647,7 @@ export default function ReaderRolling({ settings }) {
                             <spacer />
                         </div>
                     </div>
-                    <Document
+                    {/* <Document
                         file={selectedFile.file}
                         onLoadSuccess={onDocumentLoadSuccess}
                         className={styles.pdfCont}
@@ -673,7 +673,7 @@ export default function ReaderRolling({ settings }) {
                         >
                             fullscreen_exit
                         </i>
-                    </Document>
+                    </Document> */}
                 </div>
                 <div className={styles.infoBar}>
                     <Image

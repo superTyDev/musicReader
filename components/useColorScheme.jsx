@@ -1,7 +1,5 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMediaQuery } from "react-responsive";
-import createPersistedState from "use-persisted-state";
-const useColorSchemeState = createPersistedState("colorScheme");
 
 export function useColorScheme() {
     const systemPrefersDark = useMediaQuery(
@@ -11,22 +9,24 @@ export function useColorScheme() {
         undefined
     );
 
-    const [theme, setTheme] = useColorSchemeState();
-    const value = useMemo(
-        () => (theme === undefined ? "system" : theme),
-        [theme, systemPrefersDark]
-    );
+    const [theme, setTheme] = useState();
 
     useEffect(() => {
-        if ((value == "system" && systemPrefersDark) || value == "dark") {
+        setTheme(window.localStorage.getItem("theme") || "system");
+    }, []);
+
+    useEffect(() => {
+        window.localStorage.setItem("theme", theme);
+
+        if ((theme == "system" && systemPrefersDark) || theme == "dark") {
             document.documentElement.classList.add("theme-dark");
         } else {
             document.documentElement.classList.remove("theme-dark");
         }
-    }, [value]);
+    }, [theme]);
 
     return {
-        theme: value,
-        setTheme: setTheme,
+        theme,
+        setTheme,
     };
 }
