@@ -60,11 +60,17 @@
     overflow-y: auto;
     overflow-x: hidden;
     background-color: var(--background);
+    color: var(--text);
+}
+.pdfPage {
+    background-color: var(--background) !important;
 }
 .pdfPage canvas {
     height: 100% !important;
     object-fit: contain;
     margin: auto;
+    background-color: var(--background);
+    filter: invert(var(--invert));
 }
 .pdfCont:fullscreen {
     position: fixed;
@@ -305,6 +311,18 @@
     padding: 8px;
     width: 100%;
     flex: 1;
+    border: 1px solid #555;
+    border-radius: 5px;
+
+    background-color: var(--background);
+    color: var(--text);
+    filter: brightness(1.1);
+}
+
+.header input {
+    background-color: var(--background);
+    color: var(--text);
+    filter: brightness(1.1);
     border: 1px solid #555;
     border-radius: 5px;
 }

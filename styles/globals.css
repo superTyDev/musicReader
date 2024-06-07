@@ -7,6 +7,17 @@
     --accent-text: #ffffff;
     --background: #f0f0f0;
     --text: #000000;
+    --invert: 0;
+}
+
+.theme-dark {
+    --primary: #121212;
+    --primary-text: #ffffff;
+    --accent-color: #003b68;
+    --accent-text: #ffffff;
+    --background: #383838;
+    --text: #ffffff;
+    --invert: 0.9;
 }
 
 * {

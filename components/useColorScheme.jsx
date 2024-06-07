@@ -23,7 +23,7 @@ export function useColorScheme() {
         } else {
             document.documentElement.classList.remove("theme-dark");
         }
-    }, [theme]);
+    }, [theme, systemPrefersDark]);
 
     return {
         theme,
