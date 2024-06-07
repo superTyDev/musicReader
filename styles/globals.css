@@ -56,6 +56,15 @@ i,
     filter: brightness(1.15);
 }
 
+.button:disabled {
+    opacity: 0.8;
+    cursor: not-allowed;
+}
+
+.button:disabled:hover {
+    filter: brightness(1);
+}
+
 .calmButton {
     padding: 10px;
     border-radius: 6px;

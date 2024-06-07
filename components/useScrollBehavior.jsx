@@ -6,18 +6,18 @@ export function useScrollBehavior() {
 
     useEffect(() => {
         setBehaviorValue(localStorage.getItem("scrollBehavior") || "page");
-    });
+    }, []);
 
     useEffect(() => {
         window.localStorage.setItem("scrollBehavior", behaviorValue);
     }, [behaviorValue]);
 
     useEffect(() => {
-        setScrollAmount(localStorage.getItem("scrollBehavior") || "page");
-    });
+        setScrollAmount(localStorage.getItem("scrollAmount") || 100);
+    }, []);
 
     useEffect(() => {
-        window.localStorage.setItem("scrollBehavior", scrollAmount);
+        window.localStorage.setItem("scrollAmount", scrollAmount);
     }, [scrollAmount]);
 
     return {

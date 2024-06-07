@@ -8,11 +8,13 @@ import { upload } from "@vercel/blob/client";
 import styles from "../styles/Reader.module.css";
 import Collapsible from "../components/collapsible";
 
-import { pdfjs, Document, Page } from "react-pdf";
+import { Document, Page, pdfjs } from "react-pdf";
+import * as faceapi from "face-api.js";
+
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css";
 
-// pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 async function openFolder(files, setFiles, setDirectory) {
     try {
@@ -69,7 +71,7 @@ function DisplayFiles({ files, setSelectedFile, directory, setPage }) {
         return acc;
     }, {});
 
-    console.log(tempFiles);
+    // console.log(tempFiles);
 
     return Object.keys(tempFiles).map((key, index) => (
         <Collapsible title={key} key={index}>
@@ -112,7 +114,7 @@ function FilePopup({
             fetch(`/api/listFiles?username=${usernameClean}`)
                 .then((response) => response.json())
                 .then((data) => {
-                    console.log(data);
+                    // console.log(data);
                     setBlobs(data);
                 });
         }
@@ -329,7 +331,7 @@ function FilePopup({
                                             /[^a-z0-9.]/gi,
                                             "_"
                                         );
-                                        console.log(tempName);
+                                        // console.log(tempName);
                                         const newBlob = await upload(
                                             username + "/" + tempName,
                                             file.file,
@@ -367,9 +369,6 @@ function FilePopup({
 }
 
 function SettingsPopup({ open, setOpen, settings }) {
-    const [behaviorValue, setBehaviorValue] = useState("page");
-    const [scrollAmount, setScrollAmount] = useState(100);
-
     return (
         open && (
             <>
@@ -392,11 +391,7 @@ function SettingsPopup({ open, setOpen, settings }) {
                                 value={settings.scrollAmount}
                                 onChange={(e) => {
                                     settings.setScrollAmount(
-                                        e.target.value.match(/-?\d+\.\d+/)
-                                            ? e.target.value.match(
-                                                  /-?\d+\.\d+/
-                                              )[0]
-                                            : 0
+                                        e.target.value.replace(/[^0-9]+/g, "")
                                     );
                                 }}
                                 required
@@ -447,49 +442,62 @@ export default function ReaderRolling({ settings }) {
         name: "Nocturne Op. 72 Chopin",
     });
     const [modelLoaded, setModelLoaded] = useState(false);
-    const requestRef = React.useRef();
-    const previousTimeRef = React.useRef();
+    const videoRef = useRef();
     const [cloudForm, setCloudForm] = useState(0);
     const [isSettings, setIsSettings] = useState(false);
 
-    let numPagesRef = React.useRef(4);
-    let pageRef = React.useRef(1);
+    let numPagesRef = useRef(4);
+    let pageRef = useRef(1);
     const [numPages, setNumPages] = useState(numPagesRef.current);
     const [page, setPage] = useState(pageRef.current);
+    const [intPage, setIntPage] = useState(0);
 
     function onDocumentLoadSuccess({ numPages }) {
-        pageRef.current = 1;
-        setPage(pageRef.current);
+        pageRef.current = 0;
+        setPage(1);
+        setIntPage(1);
         setNumPages(numPages);
         numPagesRef.current = numPages;
     }
 
     function alterPage(state) {
         let valid = true;
+        const scrollAmount = parseInt(settings.scrollAmount);
+        const pageHeight = document.querySelector(
+            `.${styles.pdfPage}`
+        ).clientHeight;
+        const pdfCont = document.querySelector(`.${styles.pdfCont}`);
+        const windowHeight = pdfCont.clientHeight;
 
         if (state == "next") {
-            pageRef.current = Math.floor(pageRef.current) + 1;
+            pageRef.current =
+                Math.floor(pageRef.current / pageHeight) * pageHeight +
+                pageHeight;
         } else if (state == "previous") {
-            pageRef.current = Math.floor(pageRef.current) - 1;
+            pageRef.current =
+                Math.floor(pageRef.current / pageHeight) * pageHeight -
+                pageHeight;
         } else if (state == "mouthNext") {
+            // console.log(`next: ${settings.behaviorValue} - ${scrollAmount}`);
             if (settings.behaviorValue == "page") {
-                pageRef.current = Math.floor(pageRef.current) + 1;
+                pageRef.current += (scrollAmount * pageHeight) / 100;
             } else if (settings.behaviorValue == "window") {
-                pageRef.current =
-                    pageRef.current +
-                    (parseDouble(settings.scrollAmount) / 100) *
-                        document.querySelector(`.${styles.pdfCont}`)
-                            .clientHeight;
+                pageRef.current += (scrollAmount * windowHeight) / 100;
             } else if (settings.behaviorValue == "absolute") {
-                pageRef.current =
-                    pageRef.current + parseInt(settings.scrollAmount);
+                pageRef.current = pageRef.current + scrollAmount;
             }
         } else if (state == "mouthPrevious") {
-            pageRef.current = Math.floor(pageRef.current) - 1;
+            if (settings.behaviorValue == "page") {
+                pageRef.current -= (scrollAmount * pageHeight) / 100;
+            } else if (settings.behaviorValue == "window") {
+                pageRef.current -= (scrollAmount * windowHeight) / 100;
+            } else if (settings.behaviorValue == "absolute") {
+                pageRef.current = pageRef.current + scrollAmount;
+            }
         } else if (state == "reset") {
-            pageRef.current = 1;
+            pageRef.current = 0;
         } else if (parseInt(state) != NaN) {
-            pageRef.current = parseInt(state);
+            pageRef.current = (parseInt(state) - 1) * pageHeight;
         } else {
             valid = false;
         }
@@ -497,64 +505,156 @@ export default function ReaderRolling({ settings }) {
         if (valid) {
             // Clamp Value to 1 and numPages
             pageRef.current = Math.min(
-                Math.max(pageRef.current, 1),
-                numPagesRef.current
+                Math.max(pageRef.current, 0),
+                (numPagesRef.current - 1) * pageHeight
             );
 
             // Set Page
             setPage(pageRef.current);
-            document
-                .getElementsByClassName(styles.pdfPage)
-                [pageRef.current - 1]?.scrollIntoView();
+            setIntPage(parseInt(pageRef.current / pageHeight) + 1);
+            pdfCont.scroll(0, pageRef.current);
         }
     }
-
-    let Mouth = null;
-    async function initMouth() {
-        Mouth = (await import("../components/mouth")).default;
-
-        await Mouth.loadModel();
-
-        const videoElement = document.querySelector("video");
-        await Mouth.setUpCamera(videoElement);
-
-        requestRef.current = requestAnimationFrame(predictMouth);
-        setModelLoaded(true);
-        return () => cancelAnimationFrame(requestRef.current);
-    }
-
-    const predictMouth = async (time) => {
-        if (previousTimeRef.current != undefined) {
-            const deltaTime = time - previousTimeRef.current;
-
-            // Pass on a function to the setter of the state
-            // to make sure we always have the latest state
-            const mouthPrediction = await Mouth.getMouthPrediction();
-            if (mouthPrediction?.longSignal) {
-                if (
-                    pageRef.current < numPagesRef.current &&
-                    mouthPrediction.direction == "right"
-                ) {
-                    alterPage("mouthNext");
-                } else if (
-                    pageRef.current > 1 &&
-                    mouthPrediction.direction == "left"
-                ) {
-                    alterPage("mouthPrevious");
-                }
-            }
-        }
-        previousTimeRef.current = time;
-        requestRef.current = requestAnimationFrame(predictMouth);
-    };
 
     useEffect(() => {
-        if (document.readyState === "complete") {
-            initMouth();
-        } else {
-            window.addEventListener("load", initMouth);
-            return () => window.removeEventListener("load", initMouth);
-        }
+        let twitchCount = { left: 0, right: 0 };
+
+        const loadModels = async () => {
+            await faceapi.nets.tinyFaceDetector.loadFromUri("/models");
+            await faceapi.nets.faceLandmark68Net.loadFromUri("/models");
+        };
+
+        const startVideo = () => {
+            navigator.mediaDevices
+                .getUserMedia({
+                    video: true,
+                })
+                .then(
+                    (stream) => {
+                        if (videoRef.current) {
+                            videoRef.current.srcObject = stream;
+                            videoRef.current.onloadedmetadata = () => {
+                                videoRef.current.play();
+                            };
+                        }
+                    },
+                    (err) => console.log(err)
+                );
+        };
+
+        const detectFace = async () => {
+            if (videoRef.current && videoRef.current.readyState === 4) {
+                const detection = await faceapi
+                    .detectSingleFace(
+                        videoRef.current,
+                        new faceapi.TinyFaceDetectorOptions()
+                    )
+                    .withFaceLandmarks();
+                if (detection) {
+                    const resizedDetections = faceapi.resizeResults(detection, {
+                        width: videoRef.current.videoWidth,
+                        height: videoRef.current.videoHeight,
+                    });
+                    let angle = detectMouthTwitch(resizedDetections.landmarks);
+                    // console.log(Math.floor(angle));
+                    if (angle > 3) {
+                        twitchCount.right++;
+                        twitchCount.left = 0;
+
+                        if (twitchCount.right >= 2) {
+                            alterPage("mouthNext");
+                            twitchCount.right = -2;
+                        }
+                    } else if (angle < -3) {
+                        twitchCount.left++;
+                        twitchCount.right = 0;
+
+                        if (twitchCount.left >= 2) {
+                            alterPage("mouthPrevious");
+                            twitchCount.left = -2;
+                        }
+                    } else {
+                        twitchCount = { left: 0, right: 0 };
+                    }
+                    console.log(twitchCount);
+                }
+            }
+        };
+
+        const detectMouthTwitch = (landmarks) => {
+            const mouthCenter = getCenterPoint(landmarks.getMouth());
+            const noseTop = landmarks.getNose()[0];
+            const leftEyebrowInner = landmarks.getLeftEyeBrow()[2]; // Inner point of the left eyebrow
+            const rightEyebrowInner = landmarks.getRightEyeBrow()[2]; // Inner point of the right eyebrow
+
+            const noseToMouthAngle = calculateAngle(noseTop, mouthCenter);
+            const eyebrowToEyebrowAngle = calculateAngle(
+                leftEyebrowInner,
+                rightEyebrowInner
+            );
+
+            const angleDifference = noseToMouthAngle - eyebrowToEyebrowAngle;
+
+            return angleDifference - 90;
+        };
+
+        const detectMouthTwitchNew = (landmarks) => {
+            const mouthCenter = getCenterPoint(landmarks.getMouth());
+            const noseTip = landmarks.getNose()[0];
+            const leftEyeInner = landmarks.getLeftEye()[0]; // Inner point of the left eye
+            const rightEyeInner = landmarks.getRightEye()[3]; // Inner point of the right eye
+
+            const eyeMidpoint = getMidpoint(leftEyeInner, rightEyeInner);
+
+            const normalizedMouthCenter = normalizePoint(mouthCenter, noseTip);
+            const normalizedEyeMidpoint = normalizePoint(eyeMidpoint, noseTip);
+
+            const mouthAngle = calculateAngle(noseTip, normalizedMouthCenter);
+            const eyeAngle = calculateAngle(noseTip, normalizedEyeMidpoint);
+
+            const angleDifference = mouthAngle - eyeAngle;
+
+            return angleDifference;
+        };
+
+        const getCenterPoint = (points) => {
+            const sum = points.reduce(
+                (acc, point) => {
+                    acc._x += point._x;
+                    acc._y += point._y;
+                    return acc;
+                },
+                { _x: 0, _y: 0 }
+            );
+            return { _x: sum._x / points.length, _y: sum._y / points.length };
+        };
+
+        const getMidpoint = (point1, point2) => {
+            return {
+                _x: (point1._x + point2._x) / 2,
+                _y: (point1._y + point2._y) / 2,
+            };
+        };
+
+        const normalizePoint = (point, referencePoint) => {
+            return {
+                _x: point._x - referencePoint._x,
+                _y: point._y - referencePoint._y,
+            };
+        };
+
+        const calculateAngle = (point1, point2) => {
+            return (
+                Math.atan2(point2._y - point1._y, point2._x - point1._x) *
+                (180 / Math.PI)
+            );
+        };
+
+        loadModels().then(startVideo);
+
+        const intervalId = setInterval(detectFace, 100);
+
+        return () => clearInterval(intervalId);
     }, []);
 
     return (
@@ -573,14 +673,14 @@ export default function ReaderRolling({ settings }) {
                     </i>
                     <button
                         className="button icon"
-                        disabled={page === 1}
+                        disabled={intPage <= 1}
                         onClick={() => alterPage("previous")}
                     >
                         arrow_back
                     </button>
                     <div>
                         <input
-                            value={page}
+                            value={intPage}
                             onChange={(e) => {
                                 alterPage(e.target.value);
                             }}
@@ -591,7 +691,7 @@ export default function ReaderRolling({ settings }) {
                     </div>
                     <button
                         className="button icon"
-                        disabled={page >= numPages}
+                        disabled={intPage >= numPages}
                         onClick={() => alterPage("next")}
                     >
                         arrow_forward
@@ -647,7 +747,7 @@ export default function ReaderRolling({ settings }) {
                             <spacer />
                         </div>
                     </div>
-                    {/* <Document
+                    <Document
                         file={selectedFile.file}
                         onLoadSuccess={onDocumentLoadSuccess}
                         className={styles.pdfCont}
@@ -673,7 +773,7 @@ export default function ReaderRolling({ settings }) {
                         >
                             fullscreen_exit
                         </i>
-                    </Document> */}
+                    </Document>
                 </div>
                 <div className={styles.infoBar}>
                     <Image
@@ -717,9 +817,10 @@ export default function ReaderRolling({ settings }) {
                     <video
                         className={styles.videoBox}
                         style={{ transform: "scaleX(-1)" }}
-                        onClick={(e) => {
-                            e.target.style.display = "none";
-                        }}
+                        // onClick={(e) => {
+                        //     e.target.style.display = "none";
+                        // }}
+                        ref={videoRef}
                     ></video>
                 </div>
                 <FilePopup

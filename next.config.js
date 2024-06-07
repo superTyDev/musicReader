@@ -2,6 +2,12 @@
 
 module.exports = {
     images: {
-        domains: ["rdwzxcyl6ptcoxme.public.blob.vercel-storage.com"],
+        remotePatterns: [
+            {
+                protocol: "https",
+                hostname: "rdwzxcyl6ptcoxme.public.blob.vercel-storage.com",
+                pathname: "**",
+            },
+        ],
     },
 };
