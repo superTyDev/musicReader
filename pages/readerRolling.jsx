@@ -776,12 +776,12 @@ export default function ReaderRolling({ settings }) {
                     </Document>
                 </div>
                 <div className={styles.infoBar}>
-                    <Image
+                    {/* <Image
                         src="/logoShort.png"
                         alt="Music Reader Logo"
                         width={36}
                         height={36}
-                    ></Image>
+                    ></Image> */}
                     <div className={styles.verticalSpacer}></div>
                     <div>File: {selectedFile.name}</div>
                     <spacer></spacer>
