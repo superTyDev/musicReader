@@ -1,16 +1,40 @@
 import Head from "next/head";
-// import Image from "next/image";
-// import Link from "next/link";
-// import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { useMediaQuery } from "react-responsive";
 
 import "../styles/globals.css";
-import { useColorScheme } from "../components/useColorScheme.jsx";
-import { useScrollBehavior } from "../components/useScrollBehavior.jsx";
 
 export default function App({ Component, pageProps }) {
-    const { theme, setTheme } = useColorScheme();
-    const { behaviorValue, setBehaviorValue, scrollAmount, setScrollAmount } =
-        useScrollBehavior();
+    const systemPrefersDark = useMediaQuery(
+        {
+            query: "(prefers-color-scheme: dark)",
+        },
+        undefined
+    );
+
+    const [settings, setSettings] = useState({});
+
+    useEffect(() => {
+        setSettings({
+            theme: window.localStorage.getItem("theme") || "system",
+            behaviorValue:
+                window.localStorage.getItem("scrollBehavior") || "page",
+            scrollAmount: window.localStorage.getItem("scrollAmount") || 100,
+        });
+    }, []);
+
+    useEffect(() => {
+        window.localStorage.setItem("theme", settings.theme);
+
+        if (
+            (settings.theme == "system" && systemPrefersDark) ||
+            settings.theme == "dark"
+        ) {
+            document.documentElement.classList.add("theme-dark");
+        } else {
+            document.documentElement.classList.remove("theme-dark");
+        }
+    }, [settings?.theme, systemPrefersDark]);
 
     return (
         <>
@@ -23,14 +47,8 @@ export default function App({ Component, pageProps }) {
             {/* Router specifies which component to insert here as the main content */}
             <Component
                 {...pageProps}
-                settings={{
-                    theme,
-                    setTheme,
-                    behaviorValue,
-                    setBehaviorValue,
-                    scrollAmount,
-                    setScrollAmount,
-                }}
+                settings={settings}
+                setSettings={setSettings}
             />
         </>
     );

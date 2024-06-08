@@ -368,7 +368,7 @@ function FilePopup({
     return <></>;
 }
 
-function SettingsPopup({ open, setOpen, settings }) {
+function SettingsPopup({ open, setOpen, settings, setSettings }) {
     return (
         open && (
             <>
@@ -390,9 +390,16 @@ function SettingsPopup({ open, setOpen, settings }) {
                                 type="text"
                                 value={settings.scrollAmount}
                                 onChange={(e) => {
-                                    settings.setScrollAmount(
-                                        e.target.value.replace(/[^0-9]+/g, "")
-                                    );
+                                    setSettings((prev) => {
+                                        return {
+                                            ...prev,
+                                            scrollAmount:
+                                                e.target.value.replace(
+                                                    /[^0-9]+/g,
+                                                    ""
+                                                ),
+                                        };
+                                    });
                                 }}
                                 required
                             />
@@ -403,7 +410,12 @@ function SettingsPopup({ open, setOpen, settings }) {
                                 name="scrollBehavior"
                                 value={settings.behaviorValue}
                                 onChange={(e) => {
-                                    settings.setBehaviorValue(e.target.value);
+                                    setSettings((prev) => {
+                                        return {
+                                            ...prev,
+                                            behaviorValue: e.target.value,
+                                        };
+                                    });
                                 }}
                             >
                                 <option value="page">Page</option>
@@ -434,7 +446,7 @@ function SettingsPopup({ open, setOpen, settings }) {
     );
 }
 
-export default function ReaderRolling({ settings }) {
+export default function ReaderRolling({ settings, setSettings }) {
     const [files, setFiles] = useState([]);
     const [directory, setDirectory] = useState(null);
     const [selectedFile, setSelectedFile] = useState({
@@ -452,15 +464,15 @@ export default function ReaderRolling({ settings }) {
     const [page, setPage] = useState(pageRef.current);
     const [intPage, setIntPage] = useState(0);
 
-    function onDocumentLoadSuccess({ numPages }) {
+    const onDocumentLoadSuccess = ({ numPages }) => {
         pageRef.current = 0;
         setPage(1);
         setIntPage(1);
         setNumPages(numPages);
         numPagesRef.current = numPages;
-    }
+    };
 
-    function alterPage(state) {
+    const alterPage = (state) => {
         let valid = true;
         const scrollAmount = parseInt(settings.scrollAmount);
         const pageHeight = document.querySelector(
@@ -468,6 +480,8 @@ export default function ReaderRolling({ settings }) {
         ).clientHeight;
         const pdfCont = document.querySelector(`.${styles.pdfCont}`);
         const windowHeight = pdfCont.clientHeight;
+
+        // console.log(settings);
 
         if (state == "next") {
             pageRef.current =
@@ -478,7 +492,6 @@ export default function ReaderRolling({ settings }) {
                 Math.floor(pageRef.current / pageHeight) * pageHeight -
                 pageHeight;
         } else if (state == "mouthNext") {
-            // console.log(`next: ${settings.behaviorValue} - ${scrollAmount}`);
             if (settings.behaviorValue == "page") {
                 pageRef.current += (scrollAmount * pageHeight) / 100;
             } else if (settings.behaviorValue == "window") {
@@ -514,7 +527,7 @@ export default function ReaderRolling({ settings }) {
             setIntPage(parseInt(pageRef.current / pageHeight) + 1);
             pdfCont.scroll(0, pageRef.current);
         }
-    }
+    };
 
     useEffect(() => {
         let twitchCount = { left: 0, right: 0 };
@@ -563,7 +576,7 @@ export default function ReaderRolling({ settings }) {
 
                         if (twitchCount.right >= 2) {
                             alterPage("mouthNext");
-                            twitchCount.right = -2;
+                            twitchCount.right = -3;
                         }
                     } else if (angle < -3) {
                         twitchCount.left++;
@@ -571,12 +584,12 @@ export default function ReaderRolling({ settings }) {
 
                         if (twitchCount.left >= 2) {
                             alterPage("mouthPrevious");
-                            twitchCount.left = -2;
+                            twitchCount.left = -3;
                         }
                     } else {
                         twitchCount = { left: 0, right: 0 };
                     }
-                    console.log(twitchCount);
+                    // console.log(twitchCount);
                 }
             }
         };
@@ -598,25 +611,6 @@ export default function ReaderRolling({ settings }) {
             return angleDifference - 90;
         };
 
-        const detectMouthTwitchNew = (landmarks) => {
-            const mouthCenter = getCenterPoint(landmarks.getMouth());
-            const noseTip = landmarks.getNose()[0];
-            const leftEyeInner = landmarks.getLeftEye()[0]; // Inner point of the left eye
-            const rightEyeInner = landmarks.getRightEye()[3]; // Inner point of the right eye
-
-            const eyeMidpoint = getMidpoint(leftEyeInner, rightEyeInner);
-
-            const normalizedMouthCenter = normalizePoint(mouthCenter, noseTip);
-            const normalizedEyeMidpoint = normalizePoint(eyeMidpoint, noseTip);
-
-            const mouthAngle = calculateAngle(noseTip, normalizedMouthCenter);
-            const eyeAngle = calculateAngle(noseTip, normalizedEyeMidpoint);
-
-            const angleDifference = mouthAngle - eyeAngle;
-
-            return angleDifference;
-        };
-
         const getCenterPoint = (points) => {
             const sum = points.reduce(
                 (acc, point) => {
@@ -627,20 +621,6 @@ export default function ReaderRolling({ settings }) {
                 { _x: 0, _y: 0 }
             );
             return { _x: sum._x / points.length, _y: sum._y / points.length };
-        };
-
-        const getMidpoint = (point1, point2) => {
-            return {
-                _x: (point1._x + point2._x) / 2,
-                _y: (point1._y + point2._y) / 2,
-            };
-        };
-
-        const normalizePoint = (point, referencePoint) => {
-            return {
-                _x: point._x - referencePoint._x,
-                _y: point._y - referencePoint._y,
-            };
         };
 
         const calculateAngle = (point1, point2) => {
@@ -655,7 +635,7 @@ export default function ReaderRolling({ settings }) {
         const intervalId = setInterval(detectFace, 100);
 
         return () => clearInterval(intervalId);
-    }, []);
+    }, [settings]);
 
     return (
         <>
@@ -776,12 +756,14 @@ export default function ReaderRolling({ settings }) {
                     </Document>
                 </div>
                 <div className={styles.infoBar}>
-                    {/* <Image
-                        src="/logoShort.png"
-                        alt="Music Reader Logo"
-                        width={36}
-                        height={36}
-                    ></Image> */}
+                    <Link href="/">
+                        <Image
+                            src="/logoShort.png"
+                            alt="Music Reader Logo"
+                            width={36}
+                            height={36}
+                        ></Image>
+                    </Link>
                     <div className={styles.verticalSpacer}></div>
                     <div>File: {selectedFile.name}</div>
                     <spacer></spacer>
@@ -835,6 +817,7 @@ export default function ReaderRolling({ settings }) {
                     open={isSettings}
                     setOpen={setIsSettings}
                     settings={settings}
+                    setSettings={setSettings}
                 ></SettingsPopup>
             </div>
         </>

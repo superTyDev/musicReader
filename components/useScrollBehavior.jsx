@@ -6,6 +6,7 @@ export function useScrollBehavior() {
 
     useEffect(() => {
         setBehaviorValue(localStorage.getItem("scrollBehavior") || "page");
+        console.log("scrollBehavior", localStorage.getItem("scrollBehavior"));
     }, []);
 
     useEffect(() => {
@@ -14,6 +15,7 @@ export function useScrollBehavior() {
 
     useEffect(() => {
         setScrollAmount(localStorage.getItem("scrollAmount") || 100);
+        console.log("scrollAmount", localStorage.getItem("scrollAmount"));
     }, []);
 
     useEffect(() => {

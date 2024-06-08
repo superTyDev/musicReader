@@ -15,12 +15,6 @@ export default function EntryForm() {
                         <Link href="/readerRolling" className="button">
                             Rolling Viewer (head)
                         </Link>
-                        <Link href="/reader" className="button">
-                            Classic Viewer (head)
-                        </Link>
-                        <Link href="/blink" className="button">
-                            Classic Viewer (blink)
-                        </Link>
                     </div>
                     <Link href="https://github.com/superTyDev/musicReader">
                         Checkout GitHub
