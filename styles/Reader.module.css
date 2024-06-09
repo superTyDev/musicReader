@@ -253,10 +253,12 @@
     border: 1px solid #11111155;
 }
 .checkbox:hover input ~ span {
-    background-color: #ccc;
+    background-color: var(--background);
+    filter: brightness(1.1);
 }
 .checkbox input:checked ~ span {
     background-color: var(--accent-color);
+    color: var(--text);
     border: 1px solid transparent;
 }
 .checkbox span:after {
