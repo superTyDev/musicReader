@@ -20,6 +20,7 @@ export default function App({ Component, pageProps }) {
             behaviorValue:
                 window.localStorage.getItem("scrollBehavior") || "page",
             scrollAmount: window.localStorage.getItem("scrollAmount") || 100,
+            lightMusic: window.localStorage.getItem("lightMusic") || false,
         });
     }, []);
 
@@ -27,6 +28,7 @@ export default function App({ Component, pageProps }) {
         window.localStorage.setItem("theme", settings.theme);
         window.localStorage.setItem("scrollBehavior", settings.behaviorValue);
         window.localStorage.setItem("scrollAmount", settings.scrollAmount);
+        window.localStorage.setItem("lightMusic", settings.lightMusic);
 
         if (
             (settings.theme == "system" && systemPrefersDark) ||
@@ -35,6 +37,12 @@ export default function App({ Component, pageProps }) {
             document.documentElement.classList.add("theme-dark");
         } else {
             document.documentElement.classList.remove("theme-dark");
+        }
+
+        if (settings.lightMusic) {
+            document.documentElement.classList.add("light-music");
+        } else {
+            document.documentElement.classList.remove("light-music");
         }
     }, [settings, systemPrefersDark]);
 

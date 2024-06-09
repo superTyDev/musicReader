@@ -430,13 +430,33 @@ function SettingsPopup({ open, setOpen, settings, setSettings }) {
                                 name="theme"
                                 value={settings.theme}
                                 onChange={(e) => {
-                                    settings.setTheme(e.target.value);
+                                    setSettings((prev) => {
+                                        return {
+                                            ...prev,
+                                            theme: e.target.value,
+                                        };
+                                    });
                                 }}
                             >
                                 <option value="system">System</option>
                                 <option value="light">Light</option>
                                 <option value="dark">Dark</option>
                             </select>
+                            <label className={styles.checkbox}>
+                                <input
+                                    type="checkbox"
+                                    onChange={(e) => {
+                                        setSettings((prev) => {
+                                            return {
+                                                ...prev,
+                                                lightMusic: e.target.checked,
+                                            };
+                                        });
+                                    }}
+                                />
+                                <span></span>
+                                Always Light Music
+                            </label>
                         </div>
                     </div>
                 </div>
