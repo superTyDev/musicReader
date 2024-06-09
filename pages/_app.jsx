@@ -25,6 +25,8 @@ export default function App({ Component, pageProps }) {
 
     useEffect(() => {
         window.localStorage.setItem("theme", settings.theme);
+        window.localStorage.setItem("scrollBehavior", settings.behaviorValue);
+        window.localStorage.setItem("scrollAmount", settings.scrollAmount);
 
         if (
             (settings.theme == "system" && systemPrefersDark) ||
@@ -34,7 +36,7 @@ export default function App({ Component, pageProps }) {
         } else {
             document.documentElement.classList.remove("theme-dark");
         }
-    }, [settings?.theme, systemPrefersDark]);
+    }, [settings, systemPrefersDark]);
 
     return (
         <>

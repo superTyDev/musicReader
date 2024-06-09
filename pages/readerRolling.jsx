@@ -9,7 +9,6 @@ import styles from "../styles/Reader.module.css";
 import Collapsible from "../components/collapsible";
 
 import { Document, Page, pdfjs } from "react-pdf";
-import * as faceapi from "face-api.js";
 
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css";
@@ -118,7 +117,7 @@ function FilePopup({
                     setBlobs(data);
                 });
         }
-    }, [debouncedUsername]);
+    }, [debouncedUsername, open]);
 
     useEffect(() => {
         setErrorMessage("");
@@ -481,7 +480,7 @@ export default function ReaderRolling({ settings, setSettings }) {
         const pdfCont = document.querySelector(`.${styles.pdfCont}`);
         const windowHeight = pdfCont.clientHeight;
 
-        // console.log(settings);
+        // console.log(state, settings.behaviorValue, scrollAmount);
 
         if (state == "next") {
             pageRef.current =
@@ -529,113 +528,55 @@ export default function ReaderRolling({ settings, setSettings }) {
         }
     };
 
-    useEffect(() => {
-        let twitchCount = { left: 0, right: 0 };
+    let Twitch = null;
+    let twitchCount = { left: 0, right: 0 };
+    let threshold = 3;
+    let length = 2;
+    let resetDelay = -3;
 
-        const loadModels = async () => {
-            await faceapi.nets.tinyFaceDetector.loadFromUri("/models");
-            await faceapi.nets.faceLandmark68Net.loadFromUri("/models");
-        };
+    const initTwitch = async (videoElement) => {
+        Twitch = (await import("../components/twitch")).default;
+        Twitch.setVideoRef(videoElement);
 
-        const startVideo = () => {
-            navigator.mediaDevices
-                .getUserMedia({
-                    video: true,
-                })
-                .then(
-                    (stream) => {
-                        if (videoRef.current) {
-                            videoRef.current.srcObject = stream;
-                            videoRef.current.onloadedmetadata = () => {
-                                videoRef.current.play();
-                            };
-                        }
-                    },
-                    (err) => console.log(err)
-                );
-        };
+        await Twitch.loadModels();
+        const videoStarted = await Twitch.startVideo();
+        setModelLoaded(videoStarted);
 
-        const detectFace = async () => {
-            if (videoRef.current && videoRef.current.readyState === 4) {
-                const detection = await faceapi
-                    .detectSingleFace(
-                        videoRef.current,
-                        new faceapi.TinyFaceDetectorOptions()
-                    )
-                    .withFaceLandmarks();
-                if (detection) {
-                    const resizedDetections = faceapi.resizeResults(detection, {
-                        width: videoRef.current.videoWidth,
-                        height: videoRef.current.videoHeight,
-                    });
-                    let angle = detectMouthTwitch(resizedDetections.landmarks);
-                    // console.log(Math.floor(angle));
-                    if (angle > 3) {
-                        twitchCount.right++;
-                        twitchCount.left = 0;
-
-                        if (twitchCount.right >= 2) {
-                            alterPage("mouthNext");
-                            twitchCount.right = -3;
-                        }
-                    } else if (angle < -3) {
-                        twitchCount.left++;
-                        twitchCount.right = 0;
-
-                        if (twitchCount.left >= 2) {
-                            alterPage("mouthPrevious");
-                            twitchCount.left = -3;
-                        }
-                    } else {
-                        twitchCount = { left: 0, right: 0 };
-                    }
-                    // console.log(twitchCount);
-                }
-            }
-        };
-
-        const detectMouthTwitch = (landmarks) => {
-            const mouthCenter = getCenterPoint(landmarks.getMouth());
-            const noseTop = landmarks.getNose()[0];
-            const leftEyebrowInner = landmarks.getLeftEyeBrow()[2]; // Inner point of the left eyebrow
-            const rightEyebrowInner = landmarks.getRightEyeBrow()[2]; // Inner point of the right eyebrow
-
-            const noseToMouthAngle = calculateAngle(noseTop, mouthCenter);
-            const eyebrowToEyebrowAngle = calculateAngle(
-                leftEyebrowInner,
-                rightEyebrowInner
-            );
-
-            const angleDifference = noseToMouthAngle - eyebrowToEyebrowAngle;
-
-            return angleDifference - 90;
-        };
-
-        const getCenterPoint = (points) => {
-            const sum = points.reduce(
-                (acc, point) => {
-                    acc._x += point._x;
-                    acc._y += point._y;
-                    return acc;
-                },
-                { _x: 0, _y: 0 }
-            );
-            return { _x: sum._x / points.length, _y: sum._y / points.length };
-        };
-
-        const calculateAngle = (point1, point2) => {
-            return (
-                Math.atan2(point2._y - point1._y, point2._x - point1._x) *
-                (180 / Math.PI)
-            );
-        };
-
-        loadModels().then(startVideo);
-
-        const intervalId = setInterval(detectFace, 100);
+        const intervalId = setInterval(predictTwitch, 100);
 
         return () => clearInterval(intervalId);
-    }, [settings]);
+    };
+
+    const predictTwitch = async () => {
+        const angle = await Twitch.getPrediction();
+
+        if (angle > threshold) {
+            twitchCount.right++;
+            twitchCount.left = 0;
+
+            if (twitchCount.right >= length) {
+                alterPage("mouthNext");
+                twitchCount.right = resetDelay;
+            }
+        } else if (angle < -threshold) {
+            twitchCount.left++;
+            twitchCount.right = 0;
+
+            if (twitchCount.left >= length) {
+                alterPage("mouthPrevious");
+                twitchCount.left = resetDelay;
+            }
+        } else {
+            twitchCount = { left: 0, right: 0 };
+        }
+        // console.log(twitchCount);
+    };
+
+    useEffect(() => {
+        if (videoRef.current) {
+            initTwitch(videoRef.current);
+        }
+    }, [videoRef.current]);
 
     return (
         <>
@@ -756,24 +697,18 @@ export default function ReaderRolling({ settings, setSettings }) {
                     </Document>
                 </div>
                 <div className={styles.infoBar}>
-                    <Link href="/">
+                    {/* <Link href="/">
                         <Image
                             src="/logoShort.png"
                             alt="Music Reader Logo"
                             width={36}
                             height={36}
                         ></Image>
-                    </Link>
+                    </Link> */}
                     <div className={styles.verticalSpacer}></div>
                     <div>File: {selectedFile.name}</div>
                     <spacer></spacer>
-                    {modelLoaded && (
-                        <>
-                            <p className={styles.isVisible}>
-                                Camera On <i>visibility</i>
-                            </p>
-                        </>
-                    )}
+                    {modelLoaded && <i className="calmButton">videocam</i>}
                     <i
                         className="calmButton"
                         onClick={(e) => {
