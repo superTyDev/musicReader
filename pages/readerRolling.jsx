@@ -476,6 +476,7 @@ export default function ReaderRolling({ settings, setSettings }) {
     const videoRef = useRef();
     const [cloudForm, setCloudForm] = useState(0);
     const [isSettings, setIsSettings] = useState(false);
+    const [fitDirection, setFitDirection] = useState("height");
 
     let numPagesRef = useRef(4);
     let pageRef = useRef(1);
@@ -691,7 +692,11 @@ export default function ReaderRolling({ settings, setSettings }) {
                     <Document
                         file={selectedFile.file}
                         onLoadSuccess={onDocumentLoadSuccess}
-                        className={styles.pdfCont}
+                        className={`${styles.pdfCont} ${
+                            fitDirection == "height"
+                                ? styles.fitHeight
+                                : styles.fitWidth
+                        }`}
                     >
                         {Array.from(new Array(numPages), (el, index) => (
                             <Page
@@ -717,17 +722,37 @@ export default function ReaderRolling({ settings, setSettings }) {
                     </Document>
                 </div>
                 <div className={styles.infoBar}>
-                    {/* <Link href="/">
+                    <Link href="/">
                         <Image
                             src="/logoShort.png"
                             alt="Music Reader Logo"
                             width={36}
                             height={36}
                         ></Image>
-                    </Link> */}
+                    </Link>
                     <div className={styles.verticalSpacer}></div>
                     <div>File: {selectedFile.name}</div>
                     <spacer></spacer>
+                    {fitDirection == "height" && (
+                        <i
+                            className="calmButton"
+                            onClick={() => {
+                                setFitDirection("width");
+                            }}
+                        >
+                            width
+                        </i>
+                    )}
+                    {fitDirection == "width" && (
+                        <i
+                            className="calmButton"
+                            onClick={() => {
+                                setFitDirection("height");
+                            }}
+                        >
+                            height
+                        </i>
+                    )}
                     {modelLoaded && <i className="calmButton">videocam</i>}
                     <i
                         className="calmButton"

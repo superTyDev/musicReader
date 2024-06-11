@@ -5,7 +5,7 @@
 }
 
 .center {
-    width: max(80%, 800px);
+    width: min(80%, 800px);
     margin: auto;
     background-color: rgb(from var(--primary) r g b / 10%);
     backdrop-filter: blur(3px);
@@ -23,7 +23,7 @@
 }
 
 .linkCont a {
-    flex: 1 0 300px;
+    flex: 1 1 300px;
     padding: 10px;
     text-decoration: none;
     color: var(--accent-text);

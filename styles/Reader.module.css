@@ -65,8 +65,19 @@
 .pdfPage {
     background-color: var(--background) !important;
 }
+.fitHeight .pdfPage {
+    height: 100% !important;
+    object-fit: contain;
+    margin: auto;
+}
+.fitWidth .pdfPage {
+    width: 100% !important;
+    object-fit: contain;
+    margin: auto;
+}
 .pdfPage canvas {
     height: 100% !important;
+    width: 100% !important;
     object-fit: contain;
     margin: auto;
     background-color: var(--background);
