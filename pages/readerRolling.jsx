@@ -503,7 +503,9 @@ export default function ReaderRolling({ settings, setSettings }) {
 
         // console.log(state, settings.behaviorValue, scrollAmount);
 
-        if (state == "next") {
+        if (!isNaN(state)) {
+            pageRef.current = parseInt(state);
+        } else if (state == "next") {
             pageRef.current =
                 Math.floor(pageRef.current / pageHeight) * pageHeight +
                 pageHeight;
@@ -697,6 +699,10 @@ export default function ReaderRolling({ settings, setSettings }) {
                                 ? styles.fitHeight
                                 : styles.fitWidth
                         }`}
+                        onScroll={(e) => {
+                            // when scrolled, call alterPage to upgrade scroll position
+                            alterPage(e.target.scrollTop);
+                        }}
                     >
                         {Array.from(new Array(numPages), (el, index) => (
                             <Page
