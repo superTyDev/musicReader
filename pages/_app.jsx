@@ -21,6 +21,8 @@ export default function App({ Component, pageProps }) {
                 window.localStorage.getItem("scrollBehavior") || "page",
             scrollAmount: window.localStorage.getItem("scrollAmount") || 100,
             lightMusic: window.localStorage.getItem("lightMusic") || false,
+            fitDirection:
+                window.localStorage.getItem("fitDirection") || "height",
         });
     }, []);
 
@@ -29,6 +31,7 @@ export default function App({ Component, pageProps }) {
         window.localStorage.setItem("scrollBehavior", settings.behaviorValue);
         window.localStorage.setItem("scrollAmount", settings.scrollAmount);
         window.localStorage.setItem("lightMusic", settings.lightMusic);
+        window.localStorage.setItem("fitDirection", settings.fitDirection);
 
         if (
             (settings.theme == "system" && systemPrefersDark) ||

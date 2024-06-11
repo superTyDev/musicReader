@@ -476,10 +476,9 @@ export default function ReaderRolling({ settings, setSettings }) {
     const videoRef = useRef();
     const [cloudForm, setCloudForm] = useState(0);
     const [isSettings, setIsSettings] = useState(false);
-    const [fitDirection, setFitDirection] = useState("height");
 
-    let numPagesRef = useRef(4);
-    let pageRef = useRef(1);
+    let numPagesRef = useRef(0);
+    let pageRef = useRef(0);
     const [numPages, setNumPages] = useState(numPagesRef.current);
     const [page, setPage] = useState(pageRef.current);
     const [intPage, setIntPage] = useState(0);
@@ -695,12 +694,11 @@ export default function ReaderRolling({ settings, setSettings }) {
                         file={selectedFile.file}
                         onLoadSuccess={onDocumentLoadSuccess}
                         className={`${styles.pdfCont} ${
-                            fitDirection == "height"
+                            settings.fitDirection == "height"
                                 ? styles.fitHeight
                                 : styles.fitWidth
                         }`}
                         onScroll={(e) => {
-                            // when scrolled, call alterPage to upgrade scroll position
                             alterPage(e.target.scrollTop);
                         }}
                     >
@@ -739,21 +737,31 @@ export default function ReaderRolling({ settings, setSettings }) {
                     <div className={styles.verticalSpacer}></div>
                     <div>File: {selectedFile.name}</div>
                     <spacer></spacer>
-                    {fitDirection == "height" && (
+                    {settings.fitDirection == "height" && (
                         <i
                             className="calmButton"
                             onClick={() => {
-                                setFitDirection("width");
+                                setSettings((prev) => {
+                                    return {
+                                        ...prev,
+                                        fitDirection: "width",
+                                    };
+                                });
                             }}
                         >
                             width
                         </i>
                     )}
-                    {fitDirection == "width" && (
+                    {settings.fitDirection == "width" && (
                         <i
                             className="calmButton"
                             onClick={() => {
-                                setFitDirection("height");
+                                setSettings((prev) => {
+                                    return {
+                                        ...prev,
+                                        fitDirection: "height",
+                                    };
+                                });
                             }}
                         >
                             height
