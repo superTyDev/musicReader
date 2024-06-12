@@ -61,6 +61,7 @@
     overflow-x: hidden;
     background-color: var(--background);
     color: var(--text);
+    padding-bottom: 50px;
 }
 .pdfPage {
     background-color: var(--background) !important;

@@ -499,7 +499,7 @@ export default function ReaderRolling({ settings, setSettings }) {
         ).clientHeight;
         const pdfCont = document.querySelector(`.${styles.pdfCont}`);
         const windowHeight = pdfCont.clientHeight;
-
+        console.log(`-- ${pageHeight}`);
         // console.log(state, settings.behaviorValue, scrollAmount);
 
         if (!isNaN(state)) {
@@ -540,7 +540,7 @@ export default function ReaderRolling({ settings, setSettings }) {
             // Clamp Value to 1 and numPages
             pageRef.current = Math.min(
                 Math.max(pageRef.current, 0),
-                (numPagesRef.current - 1) * pageHeight
+                numPagesRef.current * pageHeight - 10
             );
 
             // Set Page
@@ -699,6 +699,7 @@ export default function ReaderRolling({ settings, setSettings }) {
                                 : styles.fitWidth
                         }`}
                         onScroll={(e) => {
+                            // console.log(e.target.scrollTop);
                             alterPage(e.target.scrollTop);
                         }}
                     >
@@ -793,9 +794,9 @@ export default function ReaderRolling({ settings, setSettings }) {
                     <video
                         className={styles.videoBox}
                         style={{ transform: "scaleX(-1)" }}
-                        // onClick={(e) => {
-                        //     e.target.style.display = "none";
-                        // }}
+                        onClick={(e) => {
+                            e.target.style.display = "none";
+                        }}
                         ref={videoRef}
                     ></video>
                 </div>
