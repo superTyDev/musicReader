@@ -540,12 +540,12 @@ export default function ReaderRolling({ settings, setSettings }) {
             // Clamp Value to 1 and numPages
             pageRef.current = Math.min(
                 Math.max(pageRef.current, 0),
-                numPagesRef.current * pageHeight - 10
+                numPagesRef.current * pageHeight - 1
             );
 
             // Set Page
             setPage(pageRef.current);
-            setIntPage(parseInt(pageRef.current / pageHeight) + 1);
+            setIntPage(parseInt((pageRef.current + 1) / pageHeight) + 1);
             pdfCont.scroll(0, pageRef.current);
         }
     };
