@@ -506,11 +506,11 @@ export default function ReaderRolling({ settings, setSettings }) {
             pageRef.current = parseInt(state);
         } else if (state == "next") {
             pageRef.current =
-                Math.floor(pageRef.current / pageHeight) * pageHeight +
+                Math.ceil(pageRef.current / pageHeight) * pageHeight +
                 pageHeight;
         } else if (state == "previous") {
             pageRef.current =
-                Math.floor(pageRef.current / pageHeight) * pageHeight -
+                Math.ceil(pageRef.current / pageHeight) * pageHeight -
                 pageHeight;
         } else if (state == "mouthNext") {
             if (settings.behaviorValue == "page") {
