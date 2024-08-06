@@ -12,6 +12,7 @@ import { Document, Page, pdfjs } from "react-pdf";
 
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css";
+import twitch from "../components/twitch";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
@@ -501,11 +502,12 @@ export default function ReaderRolling({ settings, setSettings }) {
     }
   };
 
-  let Twitch = null;
-  let twitchCount = { left: 0, right: 0 };
   let threshold = 3;
-  let length = 2;
-  let resetDelay = -3;
+
+  let Twitch = null;
+  let twitchHistory = "";
+  const historyLength = 12;
+  const resetDelay = -3;
 
   const initTwitch = async (videoElement) => {
     Twitch = (await import("../components/twitch")).default;
@@ -515,38 +517,58 @@ export default function ReaderRolling({ settings, setSettings }) {
     const videoStarted = await Twitch.startVideo();
     setModelLoaded(videoStarted);
 
-    const intervalId = setInterval(predictTwitch, 100);
+    const intervalId = setInterval(predictTwitch, 80);
 
     return () => clearInterval(intervalId);
+  };
+
+  const checkHistory = () => {
+    // check if the history contains 2+ on 2+ off then 2+ on for the same side
+    // if so, return the direction
+    if (twitchHistory.length < historyLength) {
+      return false;
+    }
+
+    const isLeft = /^L{2,}N{2,}L{2,}/;
+    const isRight = /^R{2,}N{2,}R{2,}/;
+
+    if (isLeft.test(twitchHistory)) {
+      console.log("mouthPrevious");
+      return "mouthPrevious";
+    }
+
+    if (isRight.test(twitchHistory)) {
+      console.log("mouthNext");
+      return "mouthNext";
+    }
+
+    return false;
   };
 
   const predictTwitch = async () => {
     const angle = await Twitch.getPrediction();
 
-    if (angle) {
-      console.log(Math.floor(angle * 10) / 10);
+    if (twitchHistory.length > historyLength) {
+      twitchHistory = twitchHistory.slice(1, historyLength + 1);
     }
 
     if (angle > threshold) {
-      twitchCount.right++;
-      twitchCount.left = 0;
-
-      if (twitchCount.right >= length) {
-        alterPage("mouthNext");
-        twitchCount.right = resetDelay;
-      }
+      twitchHistory += "R";
     } else if (angle < -threshold) {
-      twitchCount.left++;
-      twitchCount.right = 0;
-
-      if (twitchCount.left >= length) {
-        alterPage("mouthPrevious");
-        twitchCount.left = resetDelay;
-      }
+      twitchHistory += "L";
     } else {
-      twitchCount = { left: 0, right: 0 };
+      twitchHistory += "N";
     }
-    // console.log(twitchCount);
+
+    if (checkHistory() == "mouthNext") {
+      alterPage("mouthNext");
+      twitchHistory = "";
+    } else if (checkHistory() == "mouthPrevious") {
+      alterPage("mouthPrevious");
+      twitchHistory = "";
+    }
+
+    console.log(twitchHistory);
   };
 
   useEffect(() => {
