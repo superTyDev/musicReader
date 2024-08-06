@@ -529,16 +529,14 @@ export default function ReaderRolling({ settings, setSettings }) {
       return false;
     }
 
-    const isLeft = /^L{2,}N{2,}L{2,}/;
-    const isRight = /^R{2,}N{2,}R{2,}/;
+    const isLeft = /L{2,}N{2,}L{2,}[NR]$/;
+    const isRight = /R{2,}N{2,}R{2,}[NL]$/;
 
     if (isLeft.test(twitchHistory)) {
-      // console.log("mouthPrevious");
       return "mouthPrevious";
     }
 
     if (isRight.test(twitchHistory)) {
-      // console.log("mouthNext");
       return "mouthNext";
     }
 
@@ -562,10 +560,10 @@ export default function ReaderRolling({ settings, setSettings }) {
 
     if (checkHistory() == "mouthNext") {
       alterPage("mouthNext");
-      twitchHistory = "";
+      twitchHistory = twitchHistory.replace(/^R+/);
     } else if (checkHistory() == "mouthPrevious") {
       alterPage("mouthPrevious");
-      twitchHistory = "";
+      twitchHistory = twitchHistory.replace(/^L+/);
     }
 
     // console.log(twitchHistory);
