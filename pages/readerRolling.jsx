@@ -533,12 +533,12 @@ export default function ReaderRolling({ settings, setSettings }) {
     const isRight = /^R{2,}N{2,}R{2,}/;
 
     if (isLeft.test(twitchHistory)) {
-      console.log("mouthPrevious");
+      // console.log("mouthPrevious");
       return "mouthPrevious";
     }
 
     if (isRight.test(twitchHistory)) {
-      console.log("mouthNext");
+      // console.log("mouthNext");
       return "mouthNext";
     }
 
@@ -568,7 +568,7 @@ export default function ReaderRolling({ settings, setSettings }) {
       twitchHistory = "";
     }
 
-    console.log(twitchHistory);
+    // console.log(twitchHistory);
   };
 
   useEffect(() => {
