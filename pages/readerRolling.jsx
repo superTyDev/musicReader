@@ -12,7 +12,6 @@ import { Document, Page, pdfjs } from "react-pdf";
 
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css";
-import twitch from "../components/twitch";
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
@@ -529,8 +528,8 @@ export default function ReaderRolling({ settings, setSettings }) {
       return false;
     }
 
-    const isLeft = /L{2,}N{2,}L{2,}[NR]$/;
-    const isRight = /R{2,}N{2,}R{2,}[NL]$/;
+    const isLeft = /R{1,}N{0,}L{2,}[NR]$/;
+    const isRight = /L{1,}N{0,}R{2,}[NL]$/;
 
     if (isLeft.test(twitchHistory)) {
       return "mouthPrevious";
@@ -566,7 +565,7 @@ export default function ReaderRolling({ settings, setSettings }) {
       twitchHistory = twitchHistory.replace(/^L+/);
     }
 
-    // console.log(twitchHistory);
+    console.log(twitchHistory);
   };
 
   useEffect(() => {
