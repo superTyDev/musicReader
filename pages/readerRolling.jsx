@@ -501,7 +501,7 @@ export default function ReaderRolling({ settings, setSettings }) {
     }
   };
 
-  let threshold = 3;
+  let threshold = 2.2;
 
   let Twitch = null;
   let twitchHistory = "";
@@ -528,14 +528,16 @@ export default function ReaderRolling({ settings, setSettings }) {
       return false;
     }
 
-    const isLeft = /R{1,}N{0,}L{2,}[NR]$/;
-    const isRight = /L{1,}N{0,}R{2,}[NL]$/;
+    // Match the opposite direction, the the direction. The dash represents a repeat, which then requires a longer hold.
+    const isLeft = /R{1,}N{0,2}(-L{5,})?L{2,}$/;
+    const isRight = /L{1,}N{0,2}(\+R{5,})?R{2,}$/;
+    // const isRight = /L{1,}N{0,}R{2,}$/;
 
-    if (isLeft.test(twitchHistory)) {
+    if (isLeft.test(twitchHistory) && !twitchHistory.includes("+")) {
       return "mouthPrevious";
     }
 
-    if (isRight.test(twitchHistory)) {
+    if (isRight.test(twitchHistory) && !twitchHistory.includes("-")) {
       return "mouthNext";
     }
 
@@ -559,10 +561,10 @@ export default function ReaderRolling({ settings, setSettings }) {
 
     if (checkHistory() == "mouthNext") {
       alterPage("mouthNext");
-      twitchHistory = twitchHistory.replace(/^R+/);
+      twitchHistory = twitchHistory.replace(/R{2,4}/, "+");
     } else if (checkHistory() == "mouthPrevious") {
       alterPage("mouthPrevious");
-      twitchHistory = twitchHistory.replace(/^L+/);
+      twitchHistory = twitchHistory.replace(/L{2,4}/, "-");
     }
 
     console.log(twitchHistory);
