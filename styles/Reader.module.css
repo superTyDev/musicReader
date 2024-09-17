@@ -257,12 +257,12 @@
     left: 0;
     height: 20px;
     width: 20px;
-    background-color: #eee;
+    background-color: var(--background);
     border-radius: 5px;
     box-sizing: border-box;
 }
 .checkbox input ~ span {
-    border: 1px solid #11111155;
+    border: 1px solid #555;
 }
 .checkbox:hover input ~ span {
     background-color: var(--background);
@@ -279,6 +279,7 @@
 }
 .checkbox input:checked ~ span:after {
     display: block;
+    border-color: var(--accent-text);
 }
 .checkbox span:after {
     left: 6px;
