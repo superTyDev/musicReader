@@ -468,6 +468,7 @@ export default function ReaderRolling({ settings, setSettings }) {
   };
 
   const alterPage = (state) => {
+    console.log(state);
     let valid = true;
     const scrollAmount = parseInt(settings.scrollAmount);
     const pageHeight = document.querySelector(
@@ -509,6 +510,7 @@ export default function ReaderRolling({ settings, setSettings }) {
     }
 
     if (valid) {
+      console.log("debug 1");
       // Clamp Value to 1 and numPages
       pageRef.current = Math.min(
         Math.max(pageRef.current, 0),
@@ -516,6 +518,7 @@ export default function ReaderRolling({ settings, setSettings }) {
       );
 
       // Set Page
+      console.log("debug 2 " + pageRef.current);
       setPage(pageRef.current);
       setIntPage(Math.ceil(pageRef.current / pageHeight) + 1);
       pdfCont.scroll(0, pageRef.current);
