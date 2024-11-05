@@ -400,6 +400,7 @@ function SettingsPopup({ open, setOpen, settings, setSettings }) {
               <label className={styles.checkbox}>
                 <input
                   type="checkbox"
+                  checked={settings.lightMusic ? true : false}
                   onChange={(e) => {
                     setSettings((prev) => {
                       return {
@@ -411,6 +412,25 @@ function SettingsPopup({ open, setOpen, settings, setSettings }) {
                 />
                 <span></span>
                 Always Light Music
+              </label>
+            </div>
+            <div className={styles.formItem}>
+              <label>Video Settings</label>
+              <label className={styles.checkbox}>
+                <input
+                  type="checkbox"
+                  checked={settings.showFace ? true : false}
+                  onChange={(e) => {
+                    setSettings((prev) => {
+                      return {
+                        ...prev,
+                        showFace: e.target.checked,
+                      };
+                    });
+                  }}
+                />
+                <span></span>
+                Show Face Icon
               </label>
             </div>
           </div>
@@ -437,6 +457,7 @@ export default function ReaderRolling({ settings, setSettings }) {
   const [numPages, setNumPages] = useState(numPagesRef.current);
   const [page, setPage] = useState(pageRef.current);
   const [intPage, setIntPage] = useState(0);
+  const [face, setFace] = useState("sentiment_very_dissatisfied");
 
   const onDocumentLoadSuccess = ({ numPages }) => {
     pageRef.current = 0;
@@ -501,6 +522,22 @@ export default function ReaderRolling({ settings, setSettings }) {
     }
   };
 
+  const alterFace = (state) => {
+    if (state == "0") {
+      setFace(<i>sentiment_very_dissatisfied</i>);
+    } else if (state == "R") {
+      setFace(
+        <i style={{ transform: "rotate(40deg)" }}>sentiment_satisfied</i>
+      );
+    } else if (state == "L") {
+      setFace(
+        <i style={{ transform: "rotate(-40deg)" }}>sentiment_satisfied</i>
+      );
+    } else {
+      setFace(<i>sentiment_neutral</i>);
+    }
+  };
+
   let threshold = 2.2;
 
   let Twitch = null;
@@ -529,8 +566,8 @@ export default function ReaderRolling({ settings, setSettings }) {
     }
 
     // Match the opposite direction, the the direction. The dash represents a repeat, which then requires a longer hold.
-    const isLeft = /R{1,}N{0,2}(-L{5,})?L{2,}$/;
-    const isRight = /L{1,}N{0,2}(\+R{5,})?R{2,}$/;
+    const isLeft = /R{1,}N{0,2}L{2,}$/;
+    const isRight = /L{1,}N{0,2}R{2,}$/;
     // const isRight = /L{1,}N{0,}R{2,}$/;
 
     if (isLeft.test(twitchHistory) && !twitchHistory.includes("+")) {
@@ -553,21 +590,22 @@ export default function ReaderRolling({ settings, setSettings }) {
 
     if (angle > threshold) {
       twitchHistory += "R";
+      alterFace("R");
     } else if (angle < -threshold) {
       twitchHistory += "L";
+      alterFace("L");
     } else {
       twitchHistory += "N";
+      alterFace(angle == undefined ? "0" : "N");
     }
 
     if (checkHistory() == "mouthNext") {
       alterPage("mouthNext");
-      twitchHistory = twitchHistory.replace(/R{2,4}/, "+");
+      twitchHistory = "";
     } else if (checkHistory() == "mouthPrevious") {
       alterPage("mouthPrevious");
-      twitchHistory = twitchHistory.replace(/L{2,4}/, "-");
+      twitchHistory = "";
     }
-
-    console.log(twitchHistory);
   };
 
   useEffect(() => {
@@ -714,6 +752,8 @@ export default function ReaderRolling({ settings, setSettings }) {
           <div className={styles.verticalSpacer}></div>
           <div>File: {selectedFile.name}</div>
           <spacer></spacer>
+          {modelLoaded && settings.showFace && <>{face}</>}
+
           {settings.fitDirection == "height" && (
             <i
               className="calmButton"
@@ -744,7 +784,6 @@ export default function ReaderRolling({ settings, setSettings }) {
               height
             </i>
           )}
-          {modelLoaded && <i className="calmButton">videocam</i>}
           <i
             className="calmButton"
             onClick={(e) => {

@@ -22,6 +22,7 @@ export default function App({ Component, pageProps }) {
       lightMusic: window.localStorage.getItem("lightMusic") || false,
       fitDirection: window.localStorage.getItem("fitDirection") || "height",
       lastFolder: window.localStorage.getItem("lastFolder") || "",
+      showFace: window.localStorage.getItem("showFace") || true,
     });
   }, []);
 
@@ -32,6 +33,7 @@ export default function App({ Component, pageProps }) {
     window.localStorage.setItem("lightMusic", settings.lightMusic);
     window.localStorage.setItem("fitDirection", settings.fitDirection);
     window.localStorage.setItem("lastFolder", settings.lastFolder);
+    window.localStorage.setItem("showFace", settings.showFace);
 
     if (
       (settings.theme == "system" && systemPrefersDark) ||
