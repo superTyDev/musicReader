@@ -10,7 +10,6 @@ export default async function deleteFiles(request: NextRequest) {
     const cleanPathname = request.nextUrl.searchParams
       .get("file")
       .replace(/^https:\/\/[a-zA-Z0-9._-]+$/g, "_");
-    console.log(cleanPathname);
 
     await del(cleanPathname);
   } catch (error) {

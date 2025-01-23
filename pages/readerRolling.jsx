@@ -211,15 +211,12 @@ function FilePopup({
                     <spacer />
                     <i
                       onClick={async (e) => {
-                        console.log(blob);
                         await fetch(`/api/deleteFile?file=${blob.url}`).then(
                           (response) => {
                             if (response.status == 200) {
                               setErrorMessage("File Deleted");
                               setBlobs(blobs.filter((_, i) => i != index));
                             } else {
-                              console.log(response);
-
                               setErrorMessage("Unhelpful error message");
                             }
                           }
