@@ -204,7 +204,7 @@ function FilePopup({
                     <span></span>
                     {blob.pathname.split("/").pop()}
 
-                    <a target="_blank" href={blob.url}>
+                    <a target="_blank" rel="noreferrer" href={blob.url}>
                       <i className="icon inline">open_in_new</i>
                     </a>
 
@@ -633,7 +633,7 @@ export default function ReaderRolling({ settings, setSettings }) {
     if (videoRef.current) {
       initTwitch(videoRef.current);
     }
-  }, [initTwitch]);
+  }, []);
 
   return (
     <>
