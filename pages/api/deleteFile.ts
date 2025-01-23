@@ -5,13 +5,16 @@ export const config = {
   runtime: "edge",
 };
 
-export async function DELETE(request: NextRequest) {
+export default async function deleteFiles(request: NextRequest) {
   try {
     const cleanPathname = request.nextUrl.searchParams
       .get("file")
-      .replace(/[^a-z]/g, "_");
+      .replace(/^https:\/\/[a-zA-Z0-9._-]+$/g, "_");
+    console.log(cleanPathname);
+
     await del(cleanPathname);
   } catch (error) {
+    console.log(error);
     return NextResponse.json({ error: (error as Error).message, status: 400 });
   }
 

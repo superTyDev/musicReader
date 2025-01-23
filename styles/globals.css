@@ -58,6 +58,10 @@ i,
     direction: ltr;
 }
 
+.icon.inline {
+    font-size: 20px;
+}
+
 .button {
     width: 100%;
     padding: 10px;

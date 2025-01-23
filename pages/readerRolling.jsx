@@ -202,23 +202,28 @@ function FilePopup({
                       }}
                     />
                     <span></span>
-                    {blob.pathname}
-                    <Link href={blob.url} className=".icon">
-                      open_in_new
-                    </Link>
-                    <div className="spacer"></div>
+                    {blob.pathname.split("/").pop()}
+
+                    <a target="_blank" href={blob.url}>
+                      <i className="icon inline">open_in_new</i>
+                    </a>
+
+                    <spacer />
                     <i
                       onClick={async (e) => {
-                        await fetch(
-                          `/api/deleteFile?file=${blob.pathname}`
-                        ).then((response) => {
-                          if (response.status == 200) {
-                            setErrorMessage("File Deleted");
-                            setBlobs(blobs.filter((_, i) => i != index));
-                          } else {
-                            setErrorMessage("Unhelpful error message");
+                        console.log(blob);
+                        await fetch(`/api/deleteFile?file=${blob.url}`).then(
+                          (response) => {
+                            if (response.status == 200) {
+                              setErrorMessage("File Deleted");
+                              setBlobs(blobs.filter((_, i) => i != index));
+                            } else {
+                              console.log(response);
+
+                              setErrorMessage("Unhelpful error message");
+                            }
                           }
-                        });
+                        );
                       }}
                     >
                       delete
@@ -631,7 +636,7 @@ export default function ReaderRolling({ settings, setSettings }) {
     if (videoRef.current) {
       initTwitch(videoRef.current);
     }
-  }, [videoRef.current]);
+  }, [initTwitch]);
 
   return (
     <>
