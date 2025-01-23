@@ -202,7 +202,27 @@ function FilePopup({
                       }}
                     />
                     <span></span>
-                    <Link href={blob.url}>{blob.pathname}</Link>
+                    {blob.pathname}
+                    <Link href={blob.url} className=".icon">
+                      open_in_new
+                    </Link>
+                    <div className="spacer"></div>
+                    <i
+                      onClick={async (e) => {
+                        await fetch(
+                          `/api/deleteFile?file=${blob.pathname}`
+                        ).then((response) => {
+                          if (response.status == 200) {
+                            setErrorMessage("File Deleted");
+                            setBlobs(blobs.filter((_, i) => i != index));
+                          } else {
+                            setErrorMessage("Unhelpful error message");
+                          }
+                        });
+                      }}
+                    >
+                      delete
+                    </i>
                   </label>
                 </div>
               ))}

@@ -35,7 +35,7 @@ const startVideo = () => {
 
 const getPrediction = async () => {
   if (video && video.readyState === 4) {
-    console.log(video.videoHeight + " x " + video.videoWidth);
+    // console.log(video.videoHeight + " x " + video.videoWidth);
     const detection = await faceapi
       .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
       .withFaceLandmarks();
