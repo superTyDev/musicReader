@@ -288,13 +288,15 @@ function FilePopup({
 
                   // upload each file
                   // iterate through each checkbox and get value
-                  for (const checkbox of document.querySelectorAll(
+                  let checkList = document.querySelectorAll(
                     "#uploadFileChecks input[type=checkbox]:checked"
-                  )) {
+                  );
+                  for (const checkbox of checkList) {
                     const index = parseInt(checkbox.value);
                     const file = files[index];
                     const tempName = file.name.replace(/[^a-z0-9.]/gi, "_");
                     // console.log(tempName);
+                    setErrorMessage(`Uploading ${tempName}`);
                     const newBlob = await upload(
                       username + "/" + tempName,
                       file.file,
@@ -305,10 +307,7 @@ function FilePopup({
                     );
                   }
 
-                  setErrorMessage(
-                    `Uploaded ${Object.values(keepFiles).length} files`
-                  );
-                  // setOpen(0);
+                  setErrorMessage(`Uploaded ${checkList.length} files`);
                 }}
               >
                 Upload to Cloud <i>upload</i>

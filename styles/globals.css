@@ -65,10 +65,11 @@ i,
     color: var(--accent-text);
     background-color: var(--accent-color);
     box-shadow: 1px 1px 3px #00000055;
+    cursor: pointer;
 }
 
 .button:hover {
-    filter: brightness(1.15);
+    filter: brightness(1.25);
 }
 
 .button:disabled {

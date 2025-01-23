@@ -304,16 +304,23 @@
 }
 .modal .tabCont button {
     flex: 1;
-    padding: 5px;
+    padding: 8px;
     border: 0;
-    background-color: #fff;
+    background-color: var(--background);
+    color: var(--text);
+    filter: brightness(1.1);
+    cursor: pointer;
 }
 .modal .tabCont button:hover {
-    background-color: #ddd;
+    filter: brightness(1.25);
 }
 
 .errorMessage {
     color: red;
+}
+
+.submitButton {
+    cursor: pointer;
 }
 
 .modal input[type="text"],
