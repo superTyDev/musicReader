@@ -563,8 +563,8 @@ export default function ReaderRolling({ settings, setSettings }) {
 
   let Twitch = null;
   let twitchHistory = "";
-  const historyLength = 12;
-  const resetDelay = -3;
+  const historyLength = 18;
+  // const resetDelay = -3;
 
   const initTwitch = async (videoElement) => {
     Twitch = (await import("../components/twitch")).default;
@@ -584,6 +584,8 @@ export default function ReaderRolling({ settings, setSettings }) {
     // if so, return the direction
     if (twitchHistory.length < historyLength) {
       return false;
+    } else {
+      twitchHistory = twitchHistory.slice(1);
     }
 
     // Match the opposite direction, the the direction. The dash represents a repeat, which then requires a longer hold.
@@ -605,9 +607,7 @@ export default function ReaderRolling({ settings, setSettings }) {
   const predictTwitch = async () => {
     const angle = await Twitch.getPrediction();
 
-    if (twitchHistory.length > historyLength) {
-      twitchHistory = twitchHistory.slice(1, historyLength + 1);
-    }
+    console.log(twitchHistory);
 
     if (angle > threshold) {
       twitchHistory += "R";
@@ -620,11 +620,9 @@ export default function ReaderRolling({ settings, setSettings }) {
       alterFace(angle == undefined ? "0" : "N");
     }
 
-    if (checkHistory() == "mouthNext") {
-      alterPage("mouthNext");
-      twitchHistory = "";
-    } else if (checkHistory() == "mouthPrevious") {
-      alterPage("mouthPrevious");
+    const direction = checkHistory();
+    if (direction == "mouthNext" || direction == "mouthPrevious") {
+      alterPage(direction);
       twitchHistory = "";
     }
   };
@@ -633,7 +631,7 @@ export default function ReaderRolling({ settings, setSettings }) {
     if (videoRef.current) {
       initTwitch(videoRef.current);
     }
-  }, []);
+  }, [settings]);
 
   return (
     <>
